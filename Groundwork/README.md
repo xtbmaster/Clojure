@@ -1,1 +1,1 @@
-Some smpls
+Some clojure smpls
