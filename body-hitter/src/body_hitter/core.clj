@@ -36,7 +36,10 @@
   (let [sym-body-parts (body-parts-symmetrizer asym-body-parts)
         aggregated-size-sum (reduce + (map :size sym-body-parts))
         target (rand aggregated-size-sum)]
-       (loop [[part & remaining] sym-body-parts]
-         (if (> (:size part) target)
-          part)
-         (recur (first remaining)))))
+       (loop [[part & remaining] sym-body-parts
+              part-size (:size part)]
+         (if (> part-size target)
+          part
+          (recur remaining,
+                  (+ (:size (first remaining)),
+                                          part-size))))))
