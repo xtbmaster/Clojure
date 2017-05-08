@@ -1,4 +1,4 @@
-(ns body-hitter.core)
+  (ns body-hitter.core)
 
 (def asym-body-parts
   "not full list of body parts"
@@ -18,12 +18,12 @@
 ;   (loop [remaining-parts asym-body-parts,
 ;          final-body-parts []]
 ;         (if (empty? remaining-parts)
-;          final-body-parts)
-;         (let [[part & rest] remaining-parts]
-;           (recur rest
-;             (into remaining-parts
-;               (set [part, (matching-part part)]))))))
-
+;          final-body-parts
+;          (let [[part & rest] remaining-parts]
+;            (recur rest
+;              (into remaining-parts
+;                (set [part, (matching-part part)])))))))
+;
 (defn body-parts-symmetrizer [asym-body-parts]
   "improved version of body-parts-symmetrizer"
   (reduce (fn [final-body-parts, part]
