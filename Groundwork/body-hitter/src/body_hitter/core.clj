@@ -1,4 +1,4 @@
-  (ns body-hitter.core)
+(ns body-hitter.core)
 
 (def asym-body-parts
   "not full list of body parts"

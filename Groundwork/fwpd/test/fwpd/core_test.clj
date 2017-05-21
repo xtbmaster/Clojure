@@ -1,6 +1,6 @@
-(ns body-hitter.core-test
+(ns fwpd.core-test
   (:require [clojure.test :refer :all]
-            [body-hitter.core :refer :all]))
+            [fwpd.core :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."
