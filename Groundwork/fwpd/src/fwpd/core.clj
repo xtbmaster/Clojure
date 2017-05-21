@@ -35,8 +35,21 @@
   [filtered-map]
   (map #(get % :name) filtered-map))
 
+; (defn append
+;   "Adds another person into list"
+;   [mapped-list, new]
+;   (conj mapped-list
+;     (into {} (map vector people-keys new))))
+;
 (defn append
-  "Adds another man into list"
+  "Adds another person into the list"
   [mapped-list, new]
-  (conj mapped-list
-    (into {} (map vector people-keys new))))
+  (if (valid? new)
+   (conj mapped-list new)))
+
+(defn valid?
+ [new-coll]
+ "Validates that there are :name and :age present when new person is added."
+    (let [check-arg #(contains? new-coll (% people-keys))]
+     (and (check-arg first)
+      (check-arg second))))
