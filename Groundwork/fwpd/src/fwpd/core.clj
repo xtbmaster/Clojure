@@ -34,3 +34,9 @@
   "Turns the result of the filter into a list of names"
   [filtered-map]
   (map #(get % :name) filtered-map))
+
+(defn append
+  "Adds another man into list"
+  [mapped-list, new]
+  (conj mapped-list
+    (into {} (map vector people-keys new))))
