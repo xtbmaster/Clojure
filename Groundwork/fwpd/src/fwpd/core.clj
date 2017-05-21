@@ -29,3 +29,8 @@
 (defn filter-age
   [min-age, records]
   (filter #(>= (:age %) min-age) records))
+
+(defn names
+  "Turns the result of the filter into a list of names"
+  [filtered-map]
+  (map #(get % :name) filtered-map))
