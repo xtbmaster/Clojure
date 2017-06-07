@@ -1,8 +1,11 @@
-(defn mapset [arg]
-  (loop [[selected & remaining]])
+(def adjs ["normal"
+            "too big"
+            "too small"
+            "swimming"])
 
-(defn los [arg]
-  (let [x arg]
-    (first (drop (- (count x) 1) x))))
-
-(los [1, 2, 3])
+(defn alice-is [inside]
+  (loop [in inside
+         out []]
+        (if (empty? in)
+          out
+          (recur (rest in)(conj out (str "Alice is " (first in)))))))

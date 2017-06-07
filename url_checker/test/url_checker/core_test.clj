@@ -1,6 +1,6 @@
-(ns body-hitter.core-test
+(ns url-checker.core-test
   (:require [clojure.test :refer :all]
-            [body-hitter.core :refer :all]))
+            [url-checker.core :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."

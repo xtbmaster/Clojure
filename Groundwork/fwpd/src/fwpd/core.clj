@@ -53,3 +53,5 @@
     (let [check-arg #(contains? new-coll (% people-keys))]
      (and (check-arg first)
       (check-arg second))))
+
+(def testa (mapify (parse (slurp filename))))

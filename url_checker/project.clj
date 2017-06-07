@@ -1,5 +1,5 @@
-(defproject body-hitter "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
+(defproject url_checker "0.1.0-SNAPSHOT"
+  :description "Tool to get basic url info about"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
