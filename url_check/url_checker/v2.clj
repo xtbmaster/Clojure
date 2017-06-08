@@ -56,7 +56,7 @@
     nil)))
 
 (defn start []
-  (println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+  (println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
  (println (recognize twitter "http://twitter.com/bradfitz/status/562360748727611392"))
  (println (recognize dribbble "https://dribbble.com/shots/1905065-Travel-Icons-pack?offset=1"))
  (println (recognize dribbble "https://twitter.com/shots/1905065-Travel-Icons-pack?offset=1")))
