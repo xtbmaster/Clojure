@@ -1,6 +1,5 @@
-(ns url_checker.core
-  (:require [clojure.string :as wrk-str])
- (:gen-class :main true))
+(ns url_checker.v1
+  (:require [clojure.string :as wrk-str]))
 
 (import 'org.apache.commons.validator.routines.UrlValidator)
 (import '(java.net URL
@@ -33,7 +32,7 @@
        (catch UnknownHostException _)))
 
 
-(defn -main [& args]
+(defn start [& args]
   (println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
   (if (nil? args)
    (println "You have not entered any URLs")
