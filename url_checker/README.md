@@ -1,10 +1,12 @@
 # url_checker
 
-A console Clojure tool designed to check whether an introduced URL is valid. It also allows to get main info from the URL
+A console Clojure tool designed to check whether an introduced URL is valid. It also allows to get main info from the URL.
+
+New version works only with predefined patterns.
 
 ## Usage
 
-insert: lein run "your_url_here"
+insert: lein run
 
 ## License
 
