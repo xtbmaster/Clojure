@@ -1,5 +1,5 @@
 
-(ns address_book.test
+(ns ref_address_book.test
   ;; Refer in this case imports only doc function
   (:require [clojure.repl :refer [doc]]))
 
