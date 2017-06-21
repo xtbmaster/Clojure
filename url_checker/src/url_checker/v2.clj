@@ -1,12 +1,14 @@
 (ns url_checker.v2
   (:require [clojure.string :as wrk-str]))
 
-(defn string-to-list [condition]
+(defn string-to-list 
  "Splits the initial condition string in to separate parameters"
+  [condition]
   (map first (re-seq #"(host|path|queryparam)\((.*?)\)" condition)))
 
-(defn get-parts-map [line]
+(defn get-parts-map
   "Returns a map with key params"
+  [line]
   (loop [remaining-parts line
          final-map {}]
     (if (empty? remaining-parts)
@@ -17,20 +19,23 @@
            (re-find #".+?(?=\()" element)
            (second (re-find (re-pattern "\\((.+)\\)") element))))))))
 
-(defn add-regex-to-param [param]
- "Changes parameters with regex"
- (clojure.string/replace param #"\?\w+" "([^?/]+)"))
+(defn add-regex-to-param
+  "Changes parameters with regex"
+  [param]
+  (clojure.string/replace param #"\?\w+" "([^?/]+)"))
 
-(defn get-existing-params [urls]
- "Returns possible params"
- (->> (clojure.string/join ",separator," urls)
+(defn get-existing-params
+  "Returns possible params"
+  [urls]
+  (->> (clojure.string/join ",separator," urls)
       (re-seq #"\?\w+")
       (map #(.substring % 1))
       (map keyword)))
 
-(defn pattern [raw-condition]
- "Creates a pattern to work with URLs"
- (let [url-parts (get-parts-map (string-to-list raw-condition))
+(defn pattern
+  "Creates a pattern to work with URLs"
+  [raw-condition]
+  (let [url-parts (get-parts-map (string-to-list raw-condition))
        host (get url-parts "host")
        path (get url-parts "path")
        query (get url-parts "queryparam")
@@ -51,9 +56,8 @@
 
 (defn recognize [ptrn url]
  (let [elements (rest (re-find (:regex ptrn) url))]
-  (if (not-empty elements)
-    (zipmap (:params ptrn) elements)
-    nil)))
+  (when (not-empty elements)
+    (zipmap (:params ptrn) elements))))
 
 (defn start []
   (println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
