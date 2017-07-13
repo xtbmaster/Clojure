@@ -1,9 +1,11 @@
 
 (ns ref_address_book.test
-  ;; Refer in this case imports only doc function
-  (:require [clojure.repl :refer [doc]]))
+  (:require [clojure.repl :refer [doc]])) ; refer in this case imports only doc function
 
 (def my-contacts (ref []))
+
+(def lname :lname)
+
 
 (defn add-contact
   "adds a contact to the provided contact list"
@@ -15,11 +17,11 @@
   "prints a list of contacts"
   [contacts]
   (doseq [c @contacts]
-   (println (str "Name: " (@c :lname) ", " (@c :fname)))))
+   (println (str "Name: " (@c lname) ", " (@c :fname)))))
 
-(add-contact my-contacts {:fname "Luke" :lname "VanderHart"})
-(add-contact my-contacts {:fname "Stuart" :lname "Sierra"})
-(add-contact my-contacts {:fname "John" :lname "Doe"})
+(add-contact my-contacts {:fname "Luke" lname "VanderHart"})
+(add-contact my-contacts {:fname "Stuart" lname "Sierra"})
+(add-contact my-contacts {:fname "John" lnamw "Doe"})
 
 (defn add-initials
   "adds initials to a single contact"
