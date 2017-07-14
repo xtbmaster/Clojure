@@ -1,6 +1,6 @@
 # string_calculator
-
-A Clojure library designed to ... well, that part is up to you.
+String calculator tdd kata
+http://osherove.com/tdd-kata-1/
 
 ## Usage
 
