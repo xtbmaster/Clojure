@@ -2,7 +2,6 @@
 
 (def max-level 10)
 
-
 ;; att = lvl * 2
 
 (defn calc-attack
@@ -36,7 +35,6 @@
 (defn calc-sides
   [lvl]
   (if (> lvl 5) 4 6))
-
 
 (defn create-character
   [name lvl]
