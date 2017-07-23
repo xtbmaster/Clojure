@@ -1,0 +1,81 @@
+(ns db-clojure
+  (:require [clojure.java.jdbc :as j]
+            [clojure.string :as str]))
+(def db {:dbtype "postgresql"
+         :dbname "clojure_test"
+         :host "localhost"
+         :user "postgres"
+       	 :password "postgres"})
+(def state-sql (j/create-table-ddl :countries [[:country_id :serial "PRIMARY KEY"]
+                                               [:country "VARCHAR(32)"]
+                                               [:abrv "VARCHAR(2)"]]))
+(j/execute! db [state-sql])
+(j/insert! db :countries {:country "Ukraine" :abrv "UA"})
+(j/query db ["SELECT * FROM countries WHERE country =?" "Ukraine"])
+(j/insert-multi! db :countries [{:country "Italy" :abrv "IT"}
+                                {:country "Spain" :abrv "ES"}
+                                {:country "France" :abrv "FR"}])
+(j/db-do-prepared db ["INSERT INTO countries (country, abrv) VALUES (?, ?)"
+                      ["Russia" "RU"]
+                      ["United States" "US"]
+                      ["Romania" "RR"]] {:multi? true})
+(j/update! db :countries {:abrv "RO"} ["abrv =?" "RR"])
+(j/query db ["SELECT * FROM countries"])
+(j/query db ["SELECT * FROM countries"] {:result-set-fn count})
+(j/query db ["SELECT * FROM countries"] {:row-fn :abrv})
+(defn id-for-country
+  [c]
+  (if (= 2 (count c))
+    (j/query db ["SELECT country_id FROM countries WHERE abrv = ?" c] {:row-fn :country_id :result-set-fn first})
+    (j/query db ["SELECT country_id FROM countries WHERE country = ?" c] {:row-fn :country_id :result-set-fn first})))
+(id-for-country "UA")
+(id-for-country "Ukraine")
+(j/execute! db [(j/create-table-ddl :cities [[:country_id :int "REFERENCES countries"]
+                                                      [:city_id :serial "PRIMARY KEY"]
+                                                      [:city "VARCHAR(32)"]
+                                                      [:population :int]])])
+(def ua-cities [["Dnipro" 976525]
+               ["Kiev" 2927667]
+               ["Lviv" 728350]
+               ["Odessa" 1010783]])
+(defn load-cities!
+  [cities-vec country]
+  (let [country-id (id-for-country country)]
+    (j/insert-multi! db :cities (map #(hash-map :country_id country-id
+                                                :city (first %1)
+                                                :population (second %1)) cities-vec))))
+(load-cities! ua-cities "UA")
+(j/delete! db :cities ["city = ?" "Odessa"])
+(j/execute! db (j/drop-table-ddl :cities))
+(j/execute! db [(j/create-table-ddl :cities [[:country_id :int "REFERENCES countries ON UPDATE CASCADE ON DELETE CASCADE"]
+                                                      [:city_id :serial "PRIMARY KEY"]
+                                                      [:city "VARCHAR(32)"]
+                                                      [:population :int]])])
+(j/query db ["SELECT * FROM cities"])
+(j/delete! db :countries ["abrv = ?" "UA"])
+(j/query db ["SELECT * FROM cities"])
+(j/query db ["SELECT * FROM cities"])
+(j/query db ["SELECT constraint_name FROM information_schema.table_constraints WHERE table_name =?" "cities"])
+(j/execute! db ["ALTER TABLE cities DROP CONSTRAINT cities_country_id_fkey"])
+(j/query db ["SELECT constraint_name FROM information_schema.table_constraints WHERE table_name =?" "cities"])
+(j/execute! db ["ALTER TABLE cities ADD CONSTRAINT cities_country_id_fkey_new FOREIGN KEY (city_id) REFERENCES countries ON UPDATE CASCADE ON DELETE CASCADE"])
+(j/execute! db [(j/create-table-ddl :neighbouring_district [[:n_district_id :serial "PRIMARY KEY"]
+                                               [:n_districe_name "VARCHAR(64)"]])]
+(j/execute! db (j/drop-table-ddl :neighbouring_district))
+(j/execute! db [(j/create-table-ddl :neighbouring_district [[:n_district_id :serial "PRIMARY KEY"]
+                                               [:n_district_name "VARCHAR(64)"]])])
+(j/insert-multi! db :neighbouring_district [{:n_district_name "Nikolayevska"}
+                                             {:n_district_name "Kirovogradska"}
+                                             {:n_district_name "Vinnicka"}])
+(j/execute! db [(j/create-table-ddl :city_neigbouring_district [[:city_id :int "REFERENCES cities ON UPDATE CASCADE ON DELETE CASCADE"]
+                                                                [:n_district_id :int "REFERENCES neighbouring_district ON UPDATE CASCADE ON DELETE CASCADE"]
+                                                                ["CONSTRAINT city_neighbouring_district_pkey PRIMARY KEY (city_id, n_district_id)"]])])
+(defn id-for-city
+  [name]
+  (j/query db ["SELECT city_id FROM cities WHERE city = ?" (str/capitalize name)] {:row-fn :city_id :result-set-fn first}))
+(id-for-city "Odessa")
+(defn id-for-ndistrict
+  [name]
+  (j/query db ["SELECT n_district_id FROM neighbouring_district WHERE n_district_name = ?" (str/capitalize name)] {:row-fn :n_district_id :result-set-fn first}))
+(id-for-ndistrict "Nikolayevska")
+
