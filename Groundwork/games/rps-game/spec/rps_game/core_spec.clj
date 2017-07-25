@@ -1,6 +1,6 @@
-(ns rpc-game.core-spec
+(ns rps-game.core-spec
   (:require [speclj.core :refer :all]
-            [rpc-game.core :refer :all]))
+            [rps-game.core :refer :all]))
 
 (describe "validating user input"
           (it "tests the input of get-guess"

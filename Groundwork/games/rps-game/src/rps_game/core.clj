@@ -1,4 +1,4 @@
-(ns rpc-game.core
+(ns rps-game.core
   (clojure.core/refer-clojure))
 
 (defn get-guess
