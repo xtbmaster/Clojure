@@ -4,93 +4,17 @@
    [immutant.web :as web]
    [compojure.core :as cj]
    [compojure.route :as cjr]
+   [clojure.java.io :as io]
+   [clojure.edn :as edn]
+   [ring.util.response]
    )
   (:import
     [org.joda.time DateTime]
     [org.joda.time.format DateTimeFormat]))
 
-(def posts
-  [{:id "123"
-     :created #inst "2018-01-26"
-     :author "arthur"
-     :body "As any other company, Wix started out small. One development team, one product, one code repository. As Wix started to grow with more development teams, GitHub seemed to be a right fit for us, as our version control service. Soon after, new problems started to arise and everything went out of order. To properly manage the chaos, new rules were formed, but it was not enough. Human factors errors remained to be an issue and the biggest source of security risks — this is where the story of Automation GitHub Services begins."
-     :pictures ["rab.gif"]}
-    {:id "456"
-      :created #inst "2018-01-25"
-      :author "arthur"
-      :body "The goal of this article is to provide a fairly comprehensive introduction to the Clojure programming language. A large number of features are covered, each in a fairly brief manner. Feel free to skip around to the sections of most interest. The section names in the table of contents are hyperlinks to make this easier when reading on-line."
-      :pictures ["rab.gif"]}])
+(def post-ids ["123" "456"])
 
-(def styles
-  "body {
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 1em;
-  line-heigh: 140%;
-  padding: 0.25em 1em;
-  max-width: 640px;
-  margin: 0 auto;
-  }
-
-  img {
-  max-width: 100%;
-  height:auto;
-  }
-
-  hr {
-  border: 0;
-  height: 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  margin-bottom: 2em;
-  }
-
-  header {
-  margin-bottom: 2em;
-  }
-
-  header h1{
-  margin-bottom: 0;
-  }
-
-  header p{
-  margin-left: 0.09em;
-  }
-
-  .post{
-  display: flex;
-  justify-content: flex-start;
-  margin-bottom: 4em;
-  }
-
-  .post_sidebar {
-  text-align: center;
-  margin-right: 20px;
-  min-width: 50px;
-  }
-
-  .post_sidebar a:visited {
-  color: blue;
-  }
-
-  img.avatar {
-  border-radius: 100%;
-  width: 50px;
-  heigh: 50px;
-  }
-
-  .meta{
-  font-size: bold;
-  }
-
-  .author{
-  font-weight: bold;
-  }
-
-  footer{
-  padding-top: 1em;
-  margin-top: 1em;
-  border-top: 1px dotted black;
-  }")
+(def styles (slurp (io/resource "style.css")))
 
 (def date-formatter (DateTimeFormat/forPattern "dd.MM.YYYY"))
 
@@ -142,9 +66,13 @@
 
           ]]])
 
-(rum/defc index [posts]
+(rum/defc index [post-ids]
   (page "Стая"
-      (for [p posts]
+      (for [post-id post-ids
+             :let [path (str "posts/" post-id "post.edn")
+                    p (-> (io/file path)
+                        (slurp)
+                        (edn/read-string))]]
         (post p))))
 
 (defn render-html [component]
@@ -153,7 +81,9 @@
 (cj/defroutes routes
   (cjr/resources "/i" {:root "public/i" })
   (cj/GET "/" [:as req]
-    {:body (render-html (index posts)) })
+    {:body (render-html (index post-ids)) })
+  (cj/GET "/post/:id/:img" [id img]
+    (ring.util.response/file-response (str "posts/" id "/" img)))
   (cj/GET "/write" [:as req]
     {:body "WRITE"})
   (cj/POST "/write" [:as req]
