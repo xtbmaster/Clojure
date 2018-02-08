@@ -10,4 +10,9 @@
                  [rum                       "0.10.8"]
                  [org.clojure/clojurescript "1.9.946" :scope "provided"]]
   :main blog.server
-  :aot [blog.server])
+  :profiles {
+              :uberjar {
+                         :aot [blog.server]
+                         :uberjar-name "blog.jar"
+                         }
+              })
