@@ -8,4 +8,6 @@
                  [org.immutant/web          "2.1.10"]
                  [compojure                 "1.6.0"]
                  [rum                       "0.10.8"]
-                 [org.clojure/clojurescript "1.9.946" :scope "provided"]])
+                 [org.clojure/clojurescript "1.9.946" :scope "provided"]]
+  :main blog.server
+  :aot [blog.server])
