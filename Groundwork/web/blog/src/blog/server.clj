@@ -9,7 +9,8 @@
     [ring.util.response])
   (:import
     [org.joda.time DateTime]
-    [org.joda.time.format DateTimeFormat]))
+    [org.joda.time.format DateTimeFormat])
+  (:gen-class))
 
 (def post-ids ["123" "456"])
 
