@@ -6,10 +6,13 @@
    [compojure.route]
    [immutant.web :as web]
    [rum.core :as rum]
-   [ring.util.response])
+   [ring.util.response]
+   [ring.middleware.params]
+   [ring.middleware.multipart-params])
   (:import
    [org.joda.time DateTime]
-   [org.joda.time.format DateTimeFormat])
+   [org.joda.time.format DateTimeFormat]
+   [java.util UUID])
   (:gen-class))
 
 (def post-ids ["123" "456"])
@@ -32,7 +35,12 @@
     [:p [:span.author (:author post) ": "] (:body post)]
     [:p.meta (render-date (:created post)) " // " [:a {:href (str "/post/" (:id post))} "Link"]]]])
 
-(rum/defc page [title & children]
+
+(rum/defc page [opts & children]
+  (let [{ :keys [title index?]
+          :or {title "Стая"
+                index? false}} opts]
+
   [:html
    [:head
     [:meta {:http-equiv "Content-type" :content "text/html; charset=UTF-8"}]
@@ -41,8 +49,10 @@
     [:style {:dangerouslySetInnerHTML {:__html styles}}]]
    [:body
     [:header
-     [:h1 "Стая"]
-     [:p#site_subtitle "This is a link."]]
+      (if index?
+        [:h1 title]
+        [:h1 [:a {:href "/"} title]])
+        [:p#site_subtitle "This is a link."]]
     children
     [:footer
      [:a {:href "https://github.com/xtbmaster"} "Arthur Aliiev"]
@@ -50,25 +60,74 @@
      [:br]
      [:a {:href "/feed" :rel "alternate" :type "application/rss+xml"} "RSS"]]
 
-    [:script {:dangerouslySetInnerHTML {:__html script}}]]])
+     [:script {:dangerouslySetInnerHTML {:__html script}}]]]))
+
+
+(defn safe-slurp [source]
+  (try
+    (slurp source)
+    (catch Exception e
+      nil)))
+
 
 (defn get-post [post-id]
   (let [path (str "posts/" post-id "/post.edn")]
-    (-> (io/file path)
-        (slurp)
-        (edn/read-string))))
+    (some-> (io/file path)
+            (safe-slurp)
+            (edn/read-string))))
+
+
+(defn next-post-id []
+  (let [uuid (UUID/randomUUID)
+         time (int (/ (System/currentTimeMillis) 1000))
+         high (.getMostSignificantBits uuid)
+         low (.getLeastSignificantBits uuid)
+         new-high (bit-or (bit-and high 0x00000000FFFFFFFF)
+                    (bit-shift-left time 32))]
+    (str (UUID. new-high low))))
+
+(next-post-id)
+
+(defn save-post! [post pictures]
+  (let [dir (io/file (str "posts/" (:id post)))]
+    (.mkdir dir)
+    (doseq [[is idx] (map vector pictures (range))])
+    (spit (io/file dir "post.edn") (pr-str post))))
+
 
 (rum/defc index-page [post-ids]
-  (page "Стая"
+  (page { :index? true}
         (for [post-id post-ids]
           (post (get-post post-id)))))
 
+
 (rum/defc post-page [post-id]
-  (page "Стая"
-        (post (get-post post-id))))
+  (page {}
+    (post (get-post post-id))))
+
+
+(rum/defc edit-post-page [post-id]
+  (let [post (get-post post-id)
+         create? (nil? post)]
+    (page {:title (if create? "Создание" "Редактирование")}
+      [:form { :action (str "/post/" post-id "/edit")
+               :method "post"
+               :enctype "multipart/form-data"}
+        [:.edit_post_body
+          [:textarea { :value (:body post "")
+                       :placeholder "Пиши сюда..."
+                       :name "body"}]]
+        [:.edit_post_picture
+          [:input { :type "file" :name "picture"}]]
+        [:.edit_post_submit
+          [:input { :type "submit"
+                    :value (if create? "Создать" "Сохранить")}
+            :button.edit_post_submit ]]])))
+
 
 (defn render-html [component]
   (str "<!DOCTYPE html>\n" (rum/render-static-markup component)))
+
 
 (defn post-ids []
   (for [name (seq (.list (io/file "posts")))
@@ -76,25 +135,43 @@
         :when (.isDirectory child)]
     name))
 
+
 (compojure/defroutes routes
   (compojure.route/resources "/i" {:root "public/i"})
 
   (compojure/GET "/" []
     {:body (render-html (index-page (post-ids)))})
 
+  (compojure/GET "/post/new" []
+    { :status 303
+      :headers { "Location" (str "/post/" (next-post-id) "/edit")}})
+ 
   (compojure/GET "/post/:id/:img" [id img]
-    (ring.util.response/file-response (str "posts/" id "/" img)))
+    ring.util.response/file-response (str "posts/" id "/" img)))
 
-  (compojure/GET "/post/:id/" [post-id]
-    {:body (render-html (post-page post-id))} (compojure/GET "/write" []
-                                                {:body "WRITE"})
+  (compojure/GET "/post/:post-id" [post-id]
+    {:body (render-html (post-page post-id))}
+   
 
-    (compojure/POST "/write" [:as req]
-      {:body "POST"})
+    (compojure/GET "/post/:post-id/edit" [post-id]
+      {:body (render-html (edit-post-page post-id))})
+
+      (ring.middleware.multipart-params/wrap-multipart-params 
+        (compojure/POST "/post/:post-id/edit" [post-id :as req]
+          (let [params (:multipart-params req)
+                 body (get params "body")
+                 picture (get params "picture")]
+            (save-post! { :id post-id
+                          :body body
+                          :author "Arthur"};; FIXME author
+              [(:stream picture)]) 
+              { :status 302
+                :headers { "Location" (str "/post/" post-id)}}))
+          { :store identity})
 
     (fn [req]
       {:status 404
-       :body "404 Page Not Found"})))
+        :body "404 Page Not Found"}))
 
 (defn with-headers [handler headers]
   (fn [request]
@@ -103,6 +180,7 @@
 
 (def app
   (-> routes
+    (ring.middleware.params/wrap-params)
       (with-headers {"Content-Type" "text/html; charset=utf-8"
                      "Cache-control" "no-cache"
                      "Expires" "-1"})))
@@ -118,3 +196,4 @@
 (comment
   (def server (-main "--port" "8080"))
   (web/stop server))
+  
