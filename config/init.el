@@ -40,22 +40,30 @@
 (package-refresh-contents)
 ; list the packages you want
 (setq package-list
-      '(
-        auto-indent-mode
-        company
-        highlight-symbol
-         ;;all-the-icons
-        magit
-        elpy
-        clojure-mode
-        ac-cider
-        sunrise-commander
-        better-defaults
+  '(
+     auto-indent-mode
+     company
+     highlight-symbol
+     all-the-icons
+     magit
+     elpy
+     clojure-mode
+     ac-cider
+     sunrise-commander
+     clj-refactor
+     better-defaults
+     markdown-mode
+     js2-mode
+     json-mode
+     flycheck-joker
+     rainbow-mode
+     aggressive-indent
         ))
 
 (require 'package)
 (require 'helm-bookmark)
 
+(add-hook 'clojure-mode-hook #'my-clojure-mode-hook)
 (add-to-list 'package-archives '("ELPY" . "http://jorgenschaefer.github.io/packages/") t)
 (add-to-list 'package-archives '("MARMALADE" . "http://marmalade-repo.org/packages/") t)
 (add-to-list 'package-archives '("MELPA-STABLE" . "http://melpa-stable.milkbox.net/packages/") t)
@@ -81,12 +89,17 @@
 ;; You may delete these explanatory comments.
 (package-initialize)
 
+(require 'flycheck-joker)
+
+(defun my-clojure-mode-hook ()
+  (clj-refactor-mode 1)
+  (yas-minor-mode 1) ; for adding require/use/import statements
+  ;; This choice of keybinding leaves cider-macroexpand-1 unbound
+  (cljr-add-keybindings-with-prefix "C-c RET"))
+
+
 (eval-after-load "cider"
   '(define-key cider-mode-map (kbd "C-c C-d h") 'ac-nrepl-popup-doc))
-
-; magit
-(global-set-key (kbd "C-x g") 'magit-status)
-(global-set-key (kbd "C-x M-g") 'magit-dispatch-popup)
 
 ;; UTF-8 as default encoding
 (set-language-environment "UTF-8")
@@ -100,7 +113,8 @@
 ;; Enter cider mode when entering the clojure major mode
 (add-hook 'clojure-mode-hook 'cider-mode)
 
-
+(setq all-the-icons-color-icons t)
+(setq all-the-icons-for-buffer t)
 
 
 (setq sgml-xml-mode t)
@@ -110,14 +124,13 @@
 
 
 
-
 (defun swap-windows ()
   "Put the buffer from the selected window in next window, and vice versa"
   (interactive)
   (let* ((this (selected-window))
-         (other (next-window))
-         (this-buffer (window-buffer this))
-         (other-buffer (window-buffer other)))
+          (other (next-window))
+          (this-buffer (window-buffer this))
+          (other-buffer (window-buffer other)))
     (set-window-buffer other this-buffer)
     (set-window-buffer this other-buffer)
     )
@@ -133,7 +146,7 @@
 ;; (global-set-key (kbd "TAB") #'company-indent-or-complete-common)
 
 (add-hook 'after-init-hook 'global-company-mode)
-(global-set-key (kbd "RET") 'newline-and-indent)
+(add-hook 'after-init-hook 'global-flycheck-mode)
 
 ;; indent
 (setq lisp-indent-offset 2)
@@ -163,38 +176,46 @@
 
 ;; Syntax Highlighting
 ;; Add the following to your .emacs file:
-;;(require 'highlight-symbol)
-;;(global-set-key [(control f3)] 'highlight-symbol)
 ;;(global-set-key [f3] 'highlight-symbol-next)
 ;;(global-set-key [(shift f3)] 'highlight-symbol-prev)
 ;;(global-set-key [(meta f3)] 'highlight-symbol-query-replace)
 
 ;;(add-to-list 'load-path "~/.emacs.d")
 
-(global-hl-line-mode)
-(auto-indent-global-mode)
-
-(setq mac-option-modifier 'super)
-(setq mac-command-modifier 'meta)
+;;(setq mac-option-modifier 'super)
+;;(setq mac-command-modifier 'meta)
 
 ;; Not to display warning window at the start
 (setq warning-minimum-level :emergency)
 
 (setq cider-repl-pop-to-buffer-on-connect 'display-only)
 (setq cider-repl-display-help-banner 'nil)
+(add-to-list 'aggressive-indent-excluded-modes 'html-mode)
 
 (global-set-key (kbd "S-SPC") 'end-of-line)
 (global-set-key (kbd "C-z") 'nil)
 (global-set-key (kbd "S-j") 'sr-dired-prev-subdir)
+(global-set-key (kbd "RET") 'newline-and-indent)
+(global-set-key (kbd "C-c h") 'highlight-symbol)
+(global-set-key (kbd "RET") 'newline-and-indent)
+
+                                        ; magit
+(global-set-key (kbd "C-x g") 'magit-status)
+(global-set-key (kbd "C-x M-g") 'magit-dispatch-popup)
+
 
 (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
-    (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
-    (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
-    (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
-    (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-    (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
-    (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+(add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+(add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+(add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+(add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+(add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+(add-hook 'scheme-mode-hook           #'enable-paredit-mode)
 
+(global-aggressive-indent-mode 1)
+(global-hl-line-mode 1)
+(auto-indent-global-mode 1)
+(rainbow-mode 1)
 
 ;; term
 (setq explicit-shell-file-name "/bin/bash")
