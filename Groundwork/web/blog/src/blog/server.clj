@@ -1,6 +1,8 @@
 (ns blog.server
   (:require
     [clojure.edn :as edn]
+    [clojure.set :as set]
+    [clojure.stacktrace]
     [clojure.java.io :as io]
     [clojure.java.shell :as shell]
     [clojure.string :as str]
@@ -19,17 +21,37 @@
     [org.joda.time.format DateTimeFormat])
   (:gen-class))
 
+
+;; TODO:
+;;  add circle ci support
+
+(.mkdirs (io/file "blog_data"))
+
+(defmacro from-config [name default-value]
+  `(let [file# (io/file "blog_data" ~name)]
+     (when-not (.exists file#)
+       (spit file# ~default-value))
+     (slurp file#)))
+
 (def post-ids ["123" "456"])
 (def styles (slurp (io/resource "style.css")))
 (def script (slurp (io/resource "script.js")))
 (def date-formatter (DateTimeFormat/forPattern "dd.MM.YYYY"))
-(def authors {"arturaliiev@gmail.com" "arthur"})
+
+(when-not (.exists (io/file "blog_data/AUTHORS"))
+  (spit "blog_data/AUTHORS" (pr-str {"arturaliiev@gmail.com" "arthur"})))
+
+(def authors (edn/read-string
+               (from-config "AUTHORS"
+                 (pr-str { "arturaliiev@gmail.com" "arthur"}))))
+
+#_(def hostname (from-config "HOSTNAME" "http://mysite")) ;;localhost8080
+
 (defonce *tokens (atom {}))
 (def session-ttl (* 1000 86400 14)) ;; 14 days
 (def token-ttl-ms (* 1000 60 15)) ;; 15 min
 (def ^:const encode-table "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefjhigklmnopqrstuvwxyz")
 
-(.mkdirs (io/file "blog_data"))
 
 (when-not (.exists (io/file "blog_data/COOKIE_SECRET"))
   (save-bytes! "blog_data/COOKIE_SECRET" bytes))
@@ -118,7 +140,12 @@
           (when (== 0 idx)
             [:span.author (:author post) ": "])
           p])
-      [:p.meta (render-date (:created post)) " // " [:a {:href (str "/post/" (:id post))} "Link"]]]])
+      [:p.meta
+        (render-date (:created post))
+        " // " [:a {:href (str "/post/" (:id post))} "Link"]
+        [:span.logged_in " × " [:a.edit_post {:href (str "/post/" (:id post) "/edit")} "Edit"]]]]])
+
+
 
 
 (rum/defc page [opts & children]
@@ -127,22 +154,20 @@
                 index? false}} opts]
     [:html
       [:head
+        [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
         [:meta {:http-equiv "Content-type" :content "text/html; charset=UTF-8"}]
         [:title title]
-        [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-        [:style {:dangerouslySetInnerHTML {:__html styles}}]]
-      [:body
+        [:link { :rel "stylesheet" :type "text/css" :href "/static/styles.css"}]]
+      [:body.logged_out
         [:header
           (if index?
-            [:h1 title]
-            [:h1 [:a {:href "/"} title]])
-          [:p#site_subtitle "This is a link."]]
+            [:h1.title title [:a.new_post.logged_in { :href "/new" } "+"]]
+            [:h1.title [:a.title_back {:href "/"} "⇦"] title])
+          [:p#site_subtitle [:span "&nbps;"]]]
         children
         [:footer
           [:a {:href "https://github.com/xtbmaster"} "Arthur Aliiev"]
-          ". 2018. All rights aren't reserved."
-          [:br]
-          [:a {:href "/feed" :rel "alternate" :type "application/rss+xml"} "RSS"]]
+          ". 2018. All rights aren't reserved."]
         [:script {:dangerouslySetInnerHTML {:__html script}}]]]))
 
 
@@ -232,15 +257,19 @@
             [:button.btn (if create? "Создать" "Сохранить")]]])))
 
   (rum/defc email-sent-page [message]
-    (page {}
+    (page { :title "That's it!"}
       [:div.email_sent_message message]))
 
-  (rum/defc forbidden-page [redirect-url]
+  (rum/defc forbidden-page [redirect-url email]
     (page { :title "Enter"}
       [:form { :action "/send-email"
                :method "post"}
         [:div.forbidden_email
-          [:input { :type "text" :name "email" :placeholder "E-mail" :autofocus true}]]
+          [:input { :type "text"
+                    :name "email"
+                    :placeholder "E-mail"
+                    :autofocus true
+                    :value email}]
         [:div
           [:input { :type "hidden" :name "redirect-url" :value redirect-url}]]
         [:div
@@ -281,7 +310,10 @@
 
 
     (compojure/GET "/forbidden" [:as req]
-      { :body (render-html (forbidden-page (get (:params req) "redirect-url")))})
+      (let [redirect-url (get (:params req) "redirect-url")
+             user (get-in (:cookies req) ["blog_user" :value])
+             email (get (set/map-invert authors) user)]
+      { :body (render-html (forbidden-page (get (:params req) "redirect-url")))}))
 
     (compojure/GET "/authenticate" [:as req]
       (let [ email (get (:params req) "email")
@@ -293,6 +325,7 @@
             (swap! *tokens dissoc email)
             (assoc
               (redirect redirect-url)
+              :cookies { "blog_user" { :value user }}
               :session { :user user
                          :created (now)}
               { :status 403
@@ -315,11 +348,7 @@
           (let [token (gen-token)
                  redirect-url (get params "redirect-url")
                  link (str
-                        (name (:scheme req))
-                        "://"
-                        (:server-name req)
-                        (when (not= (:server-port req) 80)
-                          (str ":" (:server-port req)))
+                        hostname
                         "/authenticate"
                         "?email=" (encode-uri-component email)
                         "&token=" (encode-uri-component token)
@@ -358,64 +387,71 @@
               [picture])
             (redirect "/")))))
 
-  (fn [req]
-    {:status 404
-      :body "404 Page Not Found"}))
+    (fn [req]
+      {:status 404
+        :body "404 Page Not Found"}))
 
 
-(defn with-headers [handler headers]
-  (fn [request]
-    (some-> (handler request)
-      (update :headers merge headers))))
+  (defn with-headers [handler headers]
+    (fn [request]
+      (some-> (handler request)
+        (update :headers merge headers))))
 
 
-(defn print-errors [handler]
-  (fn [req]
-    (try
-      (handler req)
-      (catch Exception e
-        { :status 500
-          :headers {"Content-Type" "text/plain; charset=utf-8"}
-          :body (with-out-str
-                  (clojure.stacktrace/print-stack-trace (clojure.stacktrace/root-cause e)))}))))
+  (defn print-errors [handler]
+    (fn [req]
+      (try
+        (handler req)
+        (catch Exception e
+          { :status 500
+            :headers {"Content-Type" "text/plain; charset=utf-8"}
+            :body (with-out-str
+                    (clojure.stacktrace/print-stack-trace (clojure.stacktrace/root-cause e)))}))))
 
 
-(defn expire-session [handler]
-  (fn [req]
-    (let [created (:created (:session req))]
-      (if (and (some? session)
-            (> (since created) session-ttl))
-        (handler (dissoc req :session))
-        (handler req)))))
+  (defn expire-session [handler]
+    (fn [req]
+      (let [created (:created (:session req))]
+        (if (and (some? session)
+              (> (since created) session-ttl))
+          (handler (dissoc req :session))
+          (handler req)))))
 
 
-(def app
-  (->
-    routes
-    (expire-session)
-    (session/wrap-session
-      { :store (session.cookie/cookie-store { :key cookie-secret })
-        :cookie-name "blog"
-        :cookie-attrs { :http-only true 
-                        :secure false
-                        #_:max-age #_false}})
-    (ring.middleware.params/wrap-params)
-    (with-headers {"Content-Type" "text/html; charset=utf-8"
-                    "Cache-control" "no-cache"
-                    "Expires" "-1"})
-    (print-errors)))
+  (def app
+    (->
+      routes
+      (expire-session)
+      (session/wrap-session
+        { :store (session.cookie/cookie-store { :key cookie-secret })
+          :cookie-name "blog"
+          :cookie-attrs { :http-only true 
+                          :secure false
+                          #_:max-age #_false}})
+      (ring.middleware.params/wrap-params)
+      (with-headers {"Content-Type" "text/html; charset=utf-8"
+                      "Cache-control" "no-cache"
+                      "Expires" "-1"})
+      (print-errors))
+    (->
+      (compojure.route/resources "/static" { :root "static" })
+      (with-headers { "Cashe-Control" "no-cashe"
+                      "Expires" "-1"}))
+    (fn [req]
+      { :status 404
+        :body "404 Not Found"}))
 
 
-(defn -main [& args]
-  (let [args-map (apply array-map args)
-         port-str (or (get args-map "-p")
-                    (get args-map "--port")
-                    "8080")]
-    (println "Starting server on port" port-str)
-    (web/run #'app {:port (Integer/parseInt port-str)})))
+  (defn -main [& args]
+    (let [args-map (apply array-map args)
+           port-str (or (get args-map "-p")
+                      (get args-map "--port")
+                      "8080")]
+      (println "Starting server on port" port-str)
+      (web/run #'app {:port (Integer/parseInt port-str)})))
 
 
-(comment
-  (def server (-main "--port" "8080"))
-  (web/stop server)
-  (reset! *tokens {}))
+  (comment
+    (def server (-main "--port" "8080"))
+    (web/stop server)
+    (reset! *tokens {}))

@@ -1,6 +1,9 @@
 window.onload = function(){
   reloadSubtitle();
-  document.getElementById('site_subtitle').onclick = reloadSubtitle;
+    document.getElementById('.subtitle > span').onclick = reloadSubtitle;
+    if (document.cookie.indexOf("blog_user=") >= 0) {
+        document.body.classList.remove("anonymous");
+    }
 }
 
 function reloadSubtitle(){
@@ -10,6 +13,6 @@ function reloadSubtitle(){
     'Привет!'
   ];
   var subtitle = subtitles[Math.floor(Math.random() * subtitles.length)];
-  var div = document.getElementById('site_subtitle');
+  var div = document.querySelector('.subtitle > span');
   div.innerHTML = subtitle;
 }
