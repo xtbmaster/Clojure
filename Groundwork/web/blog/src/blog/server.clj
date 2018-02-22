@@ -7,126 +7,191 @@
     [compojure.core :as compojure]
     [compojure.route]
     [immutant.web :as web]
-    [ring.middleware.cookies :as cookies]
+    [ring.middleware.session :as session]
+    [ring.middleware.session.cookie :as session.cookie]
     [ring.middleware.multipart-params]
     [ring.middleware.params]
     [ring.util.response]
     [rum.core :as rum])
-    (:import
-      [java.util UUID]
-      [org.joda.time DateTime]
-      [org.joda.time.format DateTimeFormat])
-    (:gen-class))
+  (:import
+    [java.util UUID Date]
+    [org.joda.time DateTime]
+    [org.joda.time.format DateTimeFormat])
+  (:gen-class))
 
-  (def post-ids ["123" "456"])
-  (def styles (slurp (io/resource "style.css")))
-  (def script (slurp (io/resource "script.js")))
-  (def date-formatter (DateTimeFormat/forPattern "dd.MM.YYYY"))
+(def post-ids ["123" "456"])
+(def styles (slurp (io/resource "style.css")))
+(def script (slurp (io/resource "script.js")))
+(def date-formatter (DateTimeFormat/forPattern "dd.MM.YYYY"))
+(def authors {"arturaliiev@gmail.com" "arthur"})
+(defonce *tokens (atom {}))
+(def session-ttl (* 1000 86400 14)) ;; 14 days
+(def token-ttl-ms (* 1000 60 15)) ;; 15 min
+(def ^:const encode-table "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefjhigklmnopqrstuvwxyz")
 
+(.mkdirs (io/file "blog_data"))
 
-
-  (defn zip [coll1 coll2]
-    (map vector coll1 coll2))
-
-
-  (defn render-date [inst]
-    (.print date-formatter (DateTime. inst)))
-
-
-  (defn encode-uri-component [s]
-    (-> s
-      (java.net.URLEncoder/encode "UTF-8")
-      (str/replace #"\+" "%20")
-      (str/replace #"\%21" "!")
-      (str/replace #"\%27" "'")
-      (str/replace #"\%28" "(")
-      (str/replace #"\%29" ")")
-      (str/replace #"\%7E" "~")))
+(when-not (.exists (io/file "blog_data/COOKIE_SECRET"))
+  (save-bytes! "blog_data/COOKIE_SECRET" bytes))
 
 
-  (defn send-mail! [{:keys [to subject body]}]
-    (shell/sh
-      "mail"
-      "-s"
-      subject
-      to
-      "-a" "Content-Type: text/html"
-      "-a" "From:Blog Admin <admin@blog.website>"
-      :in body))
+(def cookie-secret (read-bytes "blog_data/COOKIE_SECRET" 16))
 
 
-  (rum/defc post [post]
-    [:.post
-      [:.post_sidebar
-        [:img.avatar {:src (str "/i/" (:author post) ".gif")}]]
-      [:div
-        (for [name (:pictures post)]
-          [:img {:src (str "/post/" (:id post) "/" name)}])
-        (for [[p idx] (zip (str/split (:body post) #"\n+") (range))]
-          [:p
-            (when (== 0 idx)
-              [:span.author (:author post) ": "])
-            p])
-        [:p.meta (render-date (:created post)) " // " [:a {:href (str "/post/" (:id post))} "Link"]]]])
+(defn zip [coll1 coll2]
+  (map vector coll1 coll2))
 
 
-  (rum/defc page [opts & children]
-    (let [{ :keys [title index?]
-            :or {title "Стая"
-                  index? false}} opts]
-      [:html
-        [:head
-          [:meta {:http-equiv "Content-type" :content "text/html; charset=UTF-8"}]
-          [:title title]
-          [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-          [:style {:dangerouslySetInnerHTML {:__html styles}}]]
-        [:body
-          [:header
-            (if index?
-              [:h1 title]
-              [:h1 [:a {:href "/"} title]])
-            [:p#site_subtitle "This is a link."]]
-          children
-          [:footer
-            [:a {:href "https://github.com/xtbmaster"} "Arthur Aliiev"]
-            ". 2018. All rights aren't reserved."
-            [:br]
-            [:a {:href "/feed" :rel "alternate" :type "application/rss+xml"} "RSS"]]
-          [:script {:dangerouslySetInnerHTML {:__html script}}]]]))
+(defn now []
+  (Date.))
 
 
-  (defn safe-slurp [source]
-    (try
-      (slurp source)
-      (catch Exception e
-        nil)))
+(defn render-date [^Date inst]
+  (.print ^DateTimeFormatter date-formatter (DateTime. inst)))
 
 
-  (defn get-post [post-id]
-    (let [path (str "posts/" post-id "/post.edn")]
-      (some-> (io/file path)
-        (safe-slurp)
-        (edn/read-string))))
+(defn encode-uri-component [s]
+  (-> s
+    (java.net.URLEncoder/encode "UTF-8")
+    (str/replace #"\+" "%20")
+    (str/replace #"\%21" "!")
+    (str/replace #"\%27" "'")
+    (str/replace #"\%28" "(")
+    (str/replace #"\%29" ")")
+    (str/replace #"\%7E" "~")))
 
-  (def ^:const encode-table "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefjhigklmnopqrstuvwxyz")
 
-  (defn encode [num len]
-    (loop [ num num
-            res ()
-            len len]
-      (if (== 0 len)
-        (str/join res)
-        (recur (bit-shift-right num 6)
-          (let [ch (nth encode-table (bit-and num 0x3F))]
-            (conj list ch))
-          (dec len)))))
+(defn redirect
+  ([url]
+    { :status 302
+      :headers { "Location" url}})
+  ([url query]
+    (let [query-str (map (fn [[k v]]
+                           (str (name k) "=" (encode-uri-component v)))
+                      query)]
+      { :status 302
+        :headers { "Location" (if (some? query-str)
+                                (str url "?" (str/join "&" query-str))
+                                url)}})))
+
+
+(defn save-bytes! [file ^bytes bytes]
+  (with-open [os (io/output-stream (io/file file))]
+    (.write os bytes)))
+
+
+(defn read-bytes [file len]
+  (with-open [is (io/input-stream (io/file file))]
+    (let [res (make-array Byte/TYPE len)]
+      (.read is res 0 len)
+      res)))
+
+
+(defn random-bytes
+  "Returns a dandom byte array of the specified size."
+  [size]
+  (let [seed (byte-array size)]
+    (.nextBytes (java.security.SecureRandom.) seed)
+    seed))
+
+
+(defn send-mail! [{:keys [to subject body]}]
+  (shell/sh
+    "mail"
+    "-s"
+    subject
+    to
+    "-a" "Content-Type: text/html"
+    "-a" "From:Blog Admin <admin@blog.website>"
+    :in body))
+
+
+(rum/defc post [post]
+  [:.post
+    [:.post_sidebar
+      [:img.avatar {:src (str "/i/" (:author post) ".gif")}]]
+    [:div
+      (for [name (:pictures post)]
+        [:img {:src (str "/post/" (:id post) "/" name)}])
+      (for [[p idx] (zip (str/split (:body post) #"\n+") (range))]
+        [:p
+          (when (== 0 idx)
+            [:span.author (:author post) ": "])
+          p])
+      [:p.meta (render-date (:created post)) " // " [:a {:href (str "/post/" (:id post))} "Link"]]]])
+
+
+(rum/defc page [opts & children]
+  (let [{ :keys [title index?]
+          :or {title "Стая"
+                index? false}} opts]
+    [:html
+      [:head
+        [:meta {:http-equiv "Content-type" :content "text/html; charset=UTF-8"}]
+        [:title title]
+        [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
+        [:style {:dangerouslySetInnerHTML {:__html styles}}]]
+      [:body
+        [:header
+          (if index?
+            [:h1 title]
+            [:h1 [:a {:href "/"} title]])
+          [:p#site_subtitle "This is a link."]]
+        children
+        [:footer
+          [:a {:href "https://github.com/xtbmaster"} "Arthur Aliiev"]
+          ". 2018. All rights aren't reserved."
+          [:br]
+          [:a {:href "/feed" :rel "alternate" :type "application/rss+xml"} "RSS"]]
+        [:script {:dangerouslySetInnerHTML {:__html script}}]]]))
+
+
+(defn safe-slurp [source]
+  (try
+    (slurp source)
+    (catch Exception e
+      nil)))
+
+
+(defn get-post [post-id]
+  (let [path (str "blog_data/posts/" post-id "/post.edn")]
+    (some-> (io/file path)
+      (safe-slurp)
+      (edn/read-string))))
+
+
+(defn encode [num len]
+  (loop [ num num
+          res ()
+          len len]
+    (if (== 0 len)
+      (str/join res)
+      (recur (bit-shift-right num 6)
+        (let [ch (nth encode-table (bit-and num 0x3F))]
+          (conj list ch))
+        (dec len)))))
+
+(defn gen-token []
+  (str
+    (encode (rand-int Integer/MAX_VALUE) 5)
+    (encode (rand-int Integer/MAX_VALUE) 5)))
+
+(defn since [^Date created]
+  (- (.getTime (now)) (.getTime created)))
+
+(defn get-token [email]
+  (when-some [token (get @*tokens email)]
+    (let [created (.getTime (:created token))
+           age (- (.getTime (now)) created)]
+      (when (<= (since created) token-ttl-ms)
+        (:value token))))
 
   (defn next-post-id []
     (str (encode (quot (System//currentTimeMillis) 1000) 6)
       (encode (rand-int (* 64 64 64)) 3)))
 
   (defn save-post! [post pictures]
-    (let [dir (io/file (str "posts/" (:id post)))
+    (let [dir (io/file (str "blog_data/posts/" (:id post)))
            picture-names (for [[picture idx] (zip pictures (range))
                                 :let [in-name (:filename picture)
                                        [_ ext] (re-matches #".*(\.[^\.]+)" in-name)]]
@@ -161,16 +226,25 @@
           [:.edit_post_body
             [:textarea { :value (:body post "")
                          :placeholder "Пиши сюда..."
-                         :name "body"}]]
+                         :name "body"
+                         :autofocus true}]]
           [:.edit_post_submit
-            [:button (if create? "Создать" "Сохранить")]]])))
+            [:button.btn (if create? "Создать" "Сохранить")]]])))
 
-
-  (rum/defc forbidden-page [redirect]
+  (rum/defc email-sent-page [message]
     (page {}
-      [:a { :href (str "/authenticate?user=arthur&token=ABC&redirect" (encode-uri-component redirect))}
-        "Login"]))
+      [:div.email_sent_message message]))
 
+  (rum/defc forbidden-page [redirect-url]
+    (page { :title "Enter"}
+      [:form { :action "/send-email"
+               :method "post"}
+        [:div.forbidden_email
+          [:input { :type "text" :name "email" :placeholder "E-mail" :autofocus true}]]
+        [:div
+          [:input { :type "hidden" :name "redirect-url" :value redirect-url}]]
+        [:div
+          [:button.btn "Send a letter"]]]))
 
   (defn render-html [component]
     (str "<!DOCTYPE html>\n" (rum/render-static-markup component)))
@@ -178,86 +252,111 @@
 
   (defn post-ids []
     (->>
-      (for [name (seq (.list (io/file "posts")))
-             :let [child (io/file "posts" name)]
+      (for [name (seq (.list (io/file "blog_data/posts")))
+             :let [child (io/file "blog_data/posts" name)]
              :when (.isDirectory child)]
         name)
       (sort)
       (reverse)))
 
-  (defn read-session [handler]
-    (fn [req]
-      (let [session (some->
-                      (get-in req [:cookies "session" :value])
-                      (edn/read-string))]
-        (handler (if (some? session)
-                   (assoc req :user (:user session))
-                   req)))))
 
   (defn check-session [req]
-    (when (nil? (:user req))
-      { :status 302
-        :headers { "Location" (str "/forbidden?redirect=" (encode-uri-component (:uri req)))}}))
+    (when (nil? get-in (req [:session :user]))
+      (redirect "/forbidden" { :redirect-url (:uri req)})))
 
 
-  (compojure/defroutes protected-routes
 
-    (compojure/GET "/write" [:as req]
+  (compojure/defroutes routes
+    (compojure.route/resources "/i" {:root "public/i"})
+
+    (compojure/GET "/" []
+      {:body (render-html (index-page (post-ids)))})
+
+    
+    (compojure/GET "/post/:id/:img" [id img]
+      (ring.util.response/file-response (str "blog_data/posts/" id "/" img)))
+
+    (compojure/GET "/post/:post-id" [post-id]
+      {:body (render-html (post-page post-id))})
+
+
+    (compojure/GET "/forbidden" [:as req]
+      { :body (render-html (forbidden-page (get (:params req) "redirect-url")))})
+
+    (compojure/GET "/authenticate" [:as req]
+      (let [ email (get (:params req) "email")
+             user (get authors email)
+             token (get (:params req) "token")
+             redirect-url (get (:params req) "redirect-url")]
+        (if (= token (get-token email))
+          (do
+            (swap! *tokens dissoc email)
+            (assoc
+              (redirect redirect-url)
+              :session { :user user
+                         :created (now)}
+              { :status 403
+                :body "403 Bad token"})))))
+
+    (compojure/GET "/logout" [:as req]
+      (assoc
+        (redirect "/")
+        :session nil))
+
+    (compojure/POST "/send-email" [:as req]
+      (let [params (:params req)
+             email (get params "email")]
+        (cond
+          (not (contains? authors email))
+          (redirect "/email-sent" { :message (str "You are not the author, " email)})
+          (some? (get-token email))
+          (redirect "/email-sent" { :message (str "Token is still alive, chek your email, " email)})
+          :else
+          (let [token (gen-token)
+                 redirect-url (get params "redirect-url")
+                 link (str
+                        (name (:scheme req))
+                        "://"
+                        (:server-name req)
+                        (when (not= (:server-port req) 80)
+                          (str ":" (:server-port req)))
+                        "/authenticate"
+                        "?email=" (encode-uri-component email)
+                        "&token=" (encode-uri-component token)
+                        "&redirect-url=" (encode-uri-component redirect-url))]
+            (swap! *tokens assoc email { :value token :created (now)})
+            (send-email!
+              { :to email
+                :subject (str "Login to blog " (render-date (now)))
+                :body (str"<html><div style='text-align: center;'><a href='" link "' style='display: inline-block; font-size: 16px; padding: 0.5em 1.75em; background: #c3c; color: white; text-decoration: none; border-radius: 4px;'>LOGIN!</a></div></html>")})
+            (redirect (str "/email-sent" { :message "Check your mail, " email}))))))
+
+    (compojure/GET "/email-sent" [:as req]
+      { :body (render-html (email-sent-page (get-in req [:params "message"])))})
+
+    (compojure/GET "/new" [:as req]
       (or
         (check-session req)
-        { :status 303
-          :headers { "Location" (str "/post/" (next-post-id) "/edit")}}))
+        (redirect (str "/post/" (next-post-id) "/edit"))))
 
     (compojure/GET "/post/:post-id/edit" [post-id :as req]
       (or
         (check-session req)
         {:body (render-html (edit-post-page post-id))}))
 
-(ring.middleware.multipart-params/wrap-multipart-params 
-  (compojure/POST "/post/:post-id/edit" [post-id :as req]
-    (or
-      (check-session req)
-      (let [params (:multipart-params req)
-             body (get params "body")
-             picture (get params "picture")]
-        (save-post! { :id post-id
-                      :body body
-                      :author (:user req)
-                      :create (java.util.Date.)}
-          [picture]) 
-        { :status 302
-          :headers { "Location" (str "/post/" post-id)}})))))
-
-
-(compojure/defroutes routes
-  (compojure.route/resources "/i" {:root "public/i"})
-
-  (compojure/GET "/" []
-    {:body (render-html (index-page (post-ids))) })
-
-  
-  (compojure/GET "/post/:id/:img" [id img]
-    (ring.util.response/file-response (str "posts/" id "/" img)))
-
-  (compojure/GET "/post/:post-id" [post-id]
-    {:body (render-html (post-page post-id))})
-
-
-  
-  (compojure/GET "/forbidden" [:as req]
-    { :body (render-html (forbidden-page (get (:params req) "redirect")))})
-
-  (compojure/GET "/authenticate" [:as req]
-    (let [user (get (:params req) "user")
-           token (get (:params req) "token")
-           redirect (get (:params req) "redirect")]
-      { :status 302
-        :headers { "Location" redirect}
-        :cookies { "session" { :value (pr-str {:user user})
-                               :http-only true
-                               :secure false}}}))
-
-  protected-routes
+    (ring.middleware.multipart-params/wrap-multipart-params 
+      (compojure/POST "/post/:post-id/edit" [post-id :as req]
+        (or
+          (check-session req)
+          (let [params (:multipart-params req)
+                 body (get params "body")
+                 picture (get params "picture")]
+            (save-post! { :id post-id
+                          :body body
+                          :author (get-in req [:session :user])
+                          :create (now)}
+              [picture])
+            (redirect "/")))))
 
   (fn [req]
     {:status 404
@@ -280,16 +379,32 @@
           :body (with-out-str
                   (clojure.stacktrace/print-stack-trace (clojure.stacktrace/root-cause e)))}))))
 
+
+(defn expire-session [handler]
+  (fn [req]
+    (let [created (:created (:session req))]
+      (if (and (some? session)
+            (> (since created) session-ttl))
+        (handler (dissoc req :session))
+        (handler req)))))
+
+
 (def app
   (->
-      routes
-    (read-session)
-    (cookies/wrap-cookies)
+    routes
+    (expire-session)
+    (session/wrap-session
+      { :store (session.cookie/cookie-store { :key cookie-secret })
+        :cookie-name "blog"
+        :cookie-attrs { :http-only true 
+                        :secure false
+                        #_:max-age #_false}})
     (ring.middleware.params/wrap-params)
     (with-headers {"Content-Type" "text/html; charset=utf-8"
                     "Cache-control" "no-cache"
                     "Expires" "-1"})
     (print-errors)))
+
 
 (defn -main [& args]
   (let [args-map (apply array-map args)
@@ -299,6 +414,8 @@
     (println "Starting server on port" port-str)
     (web/run #'app {:port (Integer/parseInt port-str)})))
 
+
 (comment
   (def server (-main "--port" "8080"))
-  (web/stop server))
+  (web/stop server)
+  (reset! *tokens {}))

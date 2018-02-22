@@ -9,5 +9,5 @@ pom.xml.asc
 /.nrepl-port
 .hgignore
 .hg/
-posts
 .#*
+blog_data
