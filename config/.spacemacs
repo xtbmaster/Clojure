@@ -18,7 +18,7 @@ values."
     ;; lazy install any layer that support lazy installation even the layers
     ;; listed in `dotspacemacs-configuration-layers'. `nil' disable the lazy
     ;; installation feature and you have to explicitly list a layer in the
-    ;; varim
+    ;; variable `dotspacemacs-configuration-layers' to install it.
     ;; (default 'unused)
     dotspacemacs-enable-lazy-installation 'unused
     ;; If non-nil then Spacemacs will ask for confirmation before installing
@@ -77,6 +77,7 @@ values."
                                         aggressive-indent
                                         auto-indent-mode
                                         company-mode
+                                        ;; highlight-symbol
                                         js2-mode
                                         json-mode
 
@@ -86,7 +87,6 @@ values."
                                         clojure-mode
                                         clj-refactor
                                         flycheck-joker
-                                        flycheck-package
                                         helm-flycheck
                                         parinfer
 
@@ -281,7 +281,7 @@ values."
     ;; If non nil smooth scrolling (native-scrolling) is enabled. Smooth
     ;; scrolling overrides the default behavior of Emacs which recenters point
     ;; when it reaches the top or bottom of the screen. (default t)
-    dotspacemacs-smooth-scrollingt t
+    dotspacemacs-smooth-scrolling relative
     ;; Control line numbers activation.
     ;; If set to `t' or `relative' line numbers are turned on in all `prog-mode' and
     ;; `text-mode' derivatives. If set to `relative', line numbers are relative.
@@ -295,7 +295,7 @@ values."
     ;;                       text-mode
     ;;   :size-limit-kb 1000)
     ;; (default nil)
-    dotspacemacs-line-numbers 'relative
+    dotspacemacs-line-numbers nil
     ;; Code folding method. Possible values are `evil' and `origami'.
     ;; (default 'evil)
     dotspacemacs-folding-method 'evil
@@ -336,14 +336,83 @@ executes.
  This function is mostly useful for variables that need to be set
 before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
+  (setq-default
+
+   ;; Evil
+   evil-shift-round nil
+
+   ;; Whitespace mode (SPC-t-w)
+   whitespace-style '(face tabs tab-mark)
+   whitespace-display-mappings
+   '((newline-mark 10 [172 10])
+     (tab-mark 9 [9655 9]))
+
+   ;; Flycheck
+   flycheck-check-syntax-automatically '(save mode-enabled)
+
+   ;; Web
+   web-mode-markup-indent-offset 2
+   web-momde-css-indent-offset 2
+
+   ;; Other
+   comment-column 70
+   sgml-xml-mode t
+   nxml-slash-auto-complete-flag t
+   lisp-indent-offset 2
+   warning-minimum-level :emergency
+
+   ;; Cider
+   cider-repl-pop-to-buffer-on-connect 'display-only
+   cider-repl-display-help-banner 'nil
+   cider-repl-use-clojure-font-lock t
+
+   ;; Icons
+   all-the-icons-color-icons t
+   all-the-icons-for-buffer t
+
+   )
+  )
+
+(defun dotspacemacs/user-config ()
+  "Configuration function for user code.
+This function is called at the very end of Spacemacs initialization after
+layers configuration.
+This is the place where most of your configurations should be done. Unless it is
+explicitly specified that a variable should be set before a package is loaded,
+you should place your code here."
+
+  ;; Custom-functions
+  (defun swap-windows ()
+    "Put the buffer from the selected window in next window, and vice versa"
+    (interactive)
+    (let* ((this (selected-window))
+            (other (next-window))
+            (this-buffer (window-buffer this))
+            (other-buffer (window-buffer other)))
+      (set-window-buffer other this-buffer)
+      (set-window-buffer this other-buffer)
+      ))
+
+  (defun bb/define-key (keymap &rest bindings)
+    (declare (indent 1))
+    (while bindings
+      (define-key keymap (pop bindings) (pop bindings))))
+
+  (defun bb/remove-from-list (list-var element)
+    `(setq ,list-var (remove ,element ,list-var)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
 
   ;; Secure environment https://glyph.twistedmatrix.com/2015/11/editor-malware.html
   (require 'cl)
   (setq tls-checktrust t)
 
   (setq python (or (executable-find "py.exe")
-                 (executable-find "python")))
-  
+                 (executable-find "python")
+                 ))
 
   (let ((trustfile
           (replace-regexp-in-string
@@ -362,65 +431,6 @@ before packages are loaded. If you are unsure, you should try in setting them in
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-  (setq-default
-
-    ;; Evil
-    evil-shift-round nil
-
-    ;; Whitespace mode (SPC-t-w)
-    whitespace-style '(face tabs tab-mark)
-    whitespace-display-mappings
-    '((newline-mark 10 [172 10]
-       (tab-mark 9 [9655 9])))
-
-    ;; Flycheck
-    flycheck-check-syntax-automatically '(save mode-enabled)
-
-    ;; Web
-    web-mode-markup-indent-offset 2
-    web-momde-css-indent-offset 2
-
-    ;; Other
-    comment-column 70
-    sgml-xml-mode t
-    nxml-slash-auto-complete-flag t
-    lisp-indent-offset 2
-    warning-minimum-level :emergency
-
-    ;; Cider
-    cider-repl-pop-to-buffer-on-connect 'display-only
-    cider-repl-display-help-banner 'nil
-    cider-repl-use-clojure-font-lock t
-
-    ;; Icons
-    all-the-icons-color-icons t
-    all-the-icons-for-buffer t))
-
-   
-  
-
-(defun dotspacemacs/user-config ()
-  "Configuration function for user code.
-This function is called at the very end of Spacemacs initialization after
-layers configuration.
-This is the place where most of your configurations should be done. Unless it is
-explicitly specified that a variable should be set before a package is loaded,
-you should place your code here."
-
-  ;; Custom-functions
-  (defun bb/define-key (keymap &rest bindings)
-    (declare (indent 1))
-    (while bindings
-      (define-key keymap (pop bindings) (pop bindings))))
-
-  (defun bb/remove-from-list (list-var element)
-    `(setq ,list-var (remove ,element ,list-var)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  
 
   ;; Custom-hooks
   (defun json-reformat-hook ()
@@ -445,19 +455,25 @@ you should place your code here."
   ;; Keybindings
   (bb/define-key evil-normal-state-map
     "+" 'evil-numbers/inc-at-pt ;; increases a number when on it
-    "_" 'evil-numbers/dec-at-pt ;; decreases a number when on it
-    "\\" 'evil-repeat-find-char-reverse) ;; revers search of a char
-  
+    "-" 'evil-numbers/dec-at-pt ;; decreases a number when on it
+    "\\" 'evil-repeat-find-char-reverse ;; revers search of a char
+    )
   (bb/define-key evil-motion-state-map
     (kbd "<backspace>") 'smex)
 
+  (global-set-key (kbd "C-c s") 'swap-windows)
   (global-set-key (kbd "S-SPC") 'end-of-line)
+  (global-set-key (kbd "C-z") 'nil)
   (global-set-key (kbd "S-j") 'sr-dired-prev-subdir)
-  ;; (global-set-key (kbd "RET") 'newline-and-indent)
+  (global-set-key (kbd "RET") 'newline-and-indent)
+  (global-set-key (kbd "C-c h") 'highlight-symbol)
+  (global-set-key (kbd "RET") 'newline-and-indent)
   (global-set-key [tab] 'tab-to-tab-stop)
 
-  ;; disabling
-  (global-set-key (kbd "C-z") 'nil)
+
+  ;; magit
+  (global-set-key (kbd "C-x g") 'magit-status)
+  (global-set-key (kbd "C-x M-g") 'magit-dispatch-popup)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -524,32 +540,26 @@ you should place your code here."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-  ;; Visual
+  ;; Other
 
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
   (add-to-list 'auto-mode-alist (cons (concat "\\." (regexp-opt '("xml" "xsd" "rng" "xslt" "xsl") t) "\\'") 'nxml-mode))
   (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
-  (setq-default tab-width 4)
-  (setq cider-repl-use-clojure-font-lock t)
-  (fset 'yes-or-no-p 'y-or-n-p)
+  (require 'flycheck-joker)
+
   (global-aggressive-indent-mode 1)
   (global-hl-line-mode 1)
   (auto-indent-global-mode 1)
   (rainbow-mode 1)
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-  ;; Other
-
-  (require 'flycheck-joker)
-
   (setq cider-cljs-lein-repl
     "(do (user/go)
-           (user/cljs-repl))"))
+           (user/cljs-repl))")
 
-  
+  (setq-default tab-width 4)
+  (setq cider-repl-use-clojure-font-lock t)
+  (fset 'yes-or-no-p 'y-or-n-p)
+  )
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
@@ -561,12 +571,16 @@ you should place your code here."
  '(neo-theme (quote icons))
   '(package-selected-packages
      (quote
-       (stickyfunc-enhance srefactor smex ranger helm-flycheck flycheck-package package-lint parinfer xterm-color web-mode web-beautify unfill tagedit smeargle slim-mode slack emojify circe oauth2 websocket shell-pop scss-mode sass-mode rainbow-mode pug-mode orgit org-projectile org-category-capture org-present org-pomodoro org-mime org-download mwim multi-term mmm-mode markdown-toc markdown-mode magit-gitflow magit-gh-pulls livid-mode skewer-mode simple-httpd less-css-mode json-mode json-snatcher json-reformat js2-refactor js2-mode js-doc htmlize helm-gitignore helm-css-scss helm-company helm-c-yasnippet haml-mode gnuplot gitignore-mode github-search github-clone github-browse-file gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gist gh marshal logito pcache ht gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip flycheck-joker flycheck evil-magit magit magit-popup git-commit ghub let-alist with-editor eshell-z eshell-prompt-extras esh-help emmet-mode diff-hl company-web web-completion-data company-tern dash-functional tern company-statistics company-quickhelp pos-tip company coffee-mode clojure-snippets clj-refactor inflections edn multiple-cursors paredit peg cider-eval-sexp-fu auto-yasnippet yasnippet auto-indent-mode auto-dictionary all-the-icons memoize alert log4e gntp ac-ispell ac-cider auto-complete cider seq queue clojure-mode ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
+       (parinfer xterm-color web-mode web-beautify unfill tagedit smeargle slim-mode slack emojify circe oauth2 websocket shell-pop scss-mode sass-mode rainbow-mode pug-mode orgit org-projectile org-category-capture org-present org-pomodoro org-mime org-download mwim multi-term mmm-mode markdown-toc markdown-mode magit-gitflow magit-gh-pulls livid-mode skewer-mode simple-httpd less-css-mode json-mode json-snatcher json-reformat js2-refactor js2-mode js-doc htmlize helm-gitignore helm-css-scss helm-company helm-c-yasnippet haml-mode gnuplot gitignore-mode github-search github-clone github-browse-file gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gist gh marshal logito pcache ht gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip flycheck-joker flycheck evil-magit magit magit-popup git-commit ghub let-alist with-editor eshell-z eshell-prompt-extras esh-help emmet-mode diff-hl company-web web-completion-data company-tern dash-functional tern company-statistics company-quickhelp pos-tip company coffee-mode clojure-snippets clj-refactor inflections edn multiple-cursors paredit peg cider-eval-sexp-fu auto-yasnippet yasnippet auto-indent-mode auto-dictionary all-the-icons memoize alert log4e gntp ac-ispell ac-cider auto-complete cider seq queue clojure-mode ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+
+
+
 
 

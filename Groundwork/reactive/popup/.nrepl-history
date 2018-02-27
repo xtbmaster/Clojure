@@ -1,0 +1,3 @@
+(boot (comp (cljs) (target)))
+boot -d pandeiro/boot-http:0.7.3 serve -d . -p 3000 wait
+quit

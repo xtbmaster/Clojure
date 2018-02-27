@@ -1,0 +1,92 @@
+windows:
+
+      create new fram - SPC w F
+      change frame - SPC w o
+
+
+refactor:
+
+      insert new-line - SPC j n
+      split sexp - SPC j s
+
+
+      navigating - SPC k l/L/h/H/j/k
+
+      jump to expresion end/beginning - SPC k $/0
+      jump to the next expression ending/beginning - SPC k j/k
+      jump to the beginning of a parent sexp - SPC k U
+      open sexp after current expr - SPC k )
+
+      absorb sexp - SPC k a (same as SPC k s but reverse)
+      delete sexp - SPC k d x
+      slurp - SPC k s/S
+      wrap sexp - SPC k w
+      unwrap sexp - SPC k W
+      copy sexp - SPC k y
+      encapsulate part for editing in a separate window - SPC n r/w
+
+      remove inner sexp - SPC k e
+      remove outter sexp - SPC k E
+
+
+
+      iedit:
+
+            edit occurencies - SPC s e
+            restrict the scope to a function - SPC s e F
+
+      evil-surround:
+
+            ( - with space ) - without space
+
+            chage surrounding type - c s <old> <new>
+            remove surrounding - d s <paren type>
+            surround a word - y s i W/w <paren type>
+            surround the whole sentence - y s s <paren type>
+            
+
+
+      highlight symbol - S *
+
+projectile:
+
+      list of projects - SPC p p
+      files in a project - SPC p f
+      directories in a project - SPC p d
+      buffers in a project - SPC p b
+      compile project - SPC p c - check this one
+      kill buffers in project - SPC p k
+
+layout:
+  
+      last layout - SPC l TAB
+      add buffer to layout - SPC l a
+
+quiting:
+
+      restart emacs and resume layouts - SPC q r
+      restart emacs - SPC q R
+      quit unsafe - SPC q Q
+      quit with prompt - SPC q q
+      save buffers and quit - SPC q s
+      kill frame - SPC q z
+
+navigating:
+
+      show previous yanked parts - SPC r y
+      list of functions - SPC s j
+      
+
+
+
+
+insert:
+
+      lorem ipsum - SPC i l
+      utf code - SPC i u
+      uuid - SPC i U U
+
+moving:
+
+      scrolling - C y, C e
+
