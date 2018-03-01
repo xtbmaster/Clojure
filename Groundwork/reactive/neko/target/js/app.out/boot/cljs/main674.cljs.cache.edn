@@ -1,0 +1,1 @@
+{:rename-macros {}, :renames {}, :use-macros {}, :excludes #{}, :name boot.cljs.main674, :imports nil, :requires {adzerk.boot-reload.js.app adzerk.boot-reload.js.app, frontend.app frontend.app}, :cljs.spec/speced-vars [], :uses nil, :cljs.spec/registry-ref [], :require-macros nil, :doc nil}

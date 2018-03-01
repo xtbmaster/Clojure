@@ -23,7 +23,7 @@
 
 (deftask dev []
   (comp
-    (serve) (watch) (reload) (cljs-repl) (cljs)))
+    (serve) (watch) (reload) (cljs-repl) (cljs) (target)))
 
 
   

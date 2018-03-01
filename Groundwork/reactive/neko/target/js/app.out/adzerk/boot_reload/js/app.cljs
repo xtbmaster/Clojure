@@ -1,0 +1,2 @@
+(ns adzerk.boot-reload.js.app (:require [adzerk.boot-reload.client :as client] frontend.app))
+(client/connect "ws://localhost:60913" {:ws-host nil, :asset-host nil, :on-jsload (fn* [] (frontend.app/init))})
