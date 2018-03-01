@@ -1,0 +1,4 @@
+(start-repl)
+(reset! converter.app/celcius-v 20)
+(start-repl)
+quit

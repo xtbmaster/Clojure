@@ -1,0 +1,4 @@
+{ :init-fns [converter.app/init]
+  :compiler-options { :output-to "js/app.js" 
+                      :optimizations :whitespace
+                      :asset-path "js/app.out"}}

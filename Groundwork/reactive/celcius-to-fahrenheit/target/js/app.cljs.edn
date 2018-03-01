@@ -1,0 +1,1 @@
+{:init-fns [converter.app/init], :compiler-options {:output-to "js/app.js", :optimizations :whitespace, :asset-path "js/app.out"}, :require (adzerk.boot-cljs-repl adzerk.boot-reload.js.app)}

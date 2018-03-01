@@ -1,3 +1,37 @@
 (boot (comp (cljs) (target)))
 boot -d pandeiro/boot-http:0.7.3 serve -d . -p 3000 wait
 quit
+(ns boot-03.app)
+(defn main [] (js/alert "NONONO"))
+(start-repl)
+quit
+(start-repl)
+(ns boot-04.app)
+(set-container-html "hello from command line")
+quit
+(start-repl)
+(ns boot-04.app)
+(set-container-html "ONONONNO")
+(init)
+(.getElementById js/document "container")
+(def container (.getElementById js/document "container"))
+(set! (.-innerHTML container) "hello")
+(set! (.-innerHTML (.getElementById js/document "container2) "OMOMOMOMO"))
+jkcsd
+(()
+)
+)))
+(set! (.-innerHTML (.getElementById js/document "container2") "OMOMOMOMOMO))
+(set! (.-innerHTML (.getElementById js/document "container2") "OMOMOMOMOMO"))
+(set! (.-innerHTML (.getElementById js/document "container2"))))
+(set! (.-innerHTML (.getElementById js/document "container2")) "OMOMOMOMO")
+(init)
+(js/alert "hello")
+quit
+(start-repl)
+(ns boot-4.app)
+@my-text
+(def my
+k
+(reset! my-text "hello")
+quit

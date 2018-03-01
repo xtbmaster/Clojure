@@ -10,7 +10,6 @@
                    [org.clojure/clojurescript "1.9.946" :scope "test"]
                    [org.clojure/tools.nrepl "0.2.12" :scope "test"]
                    [reagent "0.8.0-alpha2"]])
-                   
 
 (require
   '[adzerk.boot-cljs :refer [cljs]]
@@ -19,11 +18,9 @@
   '[pandeiro.boot-http :refer [serve]])
 
 (task-options!
-  reload {:on-jsload 'boot-06.app/init})
+  reload {:on-jsload 'converter.app/init})
 
 (deftask dev []
   (comp
     (serve) (watch) (reload) (cljs-repl) (cljs)))
-
-
   

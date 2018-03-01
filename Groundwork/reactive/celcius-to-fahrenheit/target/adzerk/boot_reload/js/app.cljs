@@ -1,0 +1,2 @@
+(ns adzerk.boot-reload.js.app (:require [adzerk.boot-reload.client :as client] converter.app))
+(client/connect "ws://localhost:54533" {:ws-host nil, :asset-host nil, :on-jsload (fn* [] (converter.app/init))})
