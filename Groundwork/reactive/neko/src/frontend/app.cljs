@@ -7,7 +7,6 @@
     [hiccups.core :as hiccups :refer [html]]))
 
 
-
 (enable-console-print!) ;; logging from withing cljs
 
 (def fox-dancing 
@@ -48,8 +47,12 @@
     "/imgs/tenor.gif")
   (dommy/listen!
     (sel1 :#tenor-button)
-    "click"
-    swap-fox))
+    :click
+    swap-fox)
+  (dommy/listen!
+    (sel1 :#button-slide)
+    :click
+    #(dommy/toggle-class! (sel1 :#slide) "slide")))
 
 
 
