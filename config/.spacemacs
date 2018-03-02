@@ -39,7 +39,6 @@ values."
     ;; Utils
     `((auto-completion :variables
         auto-completion-return-key-behavior nil
-        auto-completion-tab-key-behavior 'cycle
         auto-completion-enable-snippets-in-popup t
         auto-completion-enable-help-tooltip 'manual
         :disabled-for org erc)
@@ -392,6 +391,9 @@ before packages are loaded. If you are unsure, you should try in setting them in
     nxml-slash-auto-complete-flag t
     lisp-indent-offset 2
     warning-minimum-level :emergency
+    indent-tabs-mode t
+    default-tab-width 4
+    tab-width 4
 
     ;; Cider
     cider-repl-pop-to-buffer-on-connect 'display-only
@@ -444,6 +446,7 @@ you should place your code here."
     (rainbow-mode 1))
 
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -460,16 +463,17 @@ you should place your code here."
   (global-set-key (kbd "S-SPC") 'end-of-line)
   (global-set-key (kbd "S-j") 'sr-dired-prev-subdir)
   (global-set-key (kbd "C-g") 'evil-lisp-state/quit)
-  ;; (global-set-key (kbd "RET") 'newline-and-indent)
-  (global-set-key [tab] 'tab-to-tab-stop)
+  (global-set-key (kbd "RET") 'newline-and-indent)
+
+  (bb/define-key evil-insert-state-map
+    (kbd "TAB") 'tab-to-tab-stop)
 
   ;; disabling
   (global-set-key (kbd "C-z") 'nil)
 
   ;; company
   (with-eval-after-load 'company
-    (define-key company-active-map (kbd "<return>") #'company-complete-selection)
-    (define-key company-active-map (kbd "RET") #'company-complete-selection))
+    (define-key company-active-map (kbd "C-c i") #'company-complete-selection)) 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -605,6 +609,7 @@ you should place your code here."
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
+  '(neo-theme (quote classic))
   '(package-selected-packages
      (quote
        (color-identifiers-mode impatient-mode lispy zoutline swiper ivy stickyfunc-enhance srefactor smex ranger helm-flycheck flycheck-package package-lint parinfer xterm-color web-mode web-beautify unfill tagedit smeargle slim-mode slack emojify circe oauth2 websocket shell-pop scss-mode sass-mode rainbow-mode pug-mode orgit org-projectile org-category-capture org-present org-pomodoro org-mime org-download mwim multi-term mmm-mode markdown-toc markdown-mode magit-gitflow magit-gh-pulls livid-mode skewer-mode simple-httpd less-css-mode json-mode json-snatcher json-reformat js2-refactor js2-mode js-doc htmlize helm-gitignore helm-css-scss helm-company helm-c-yasnippet haml-mode gnuplot gitignore-mode github-search github-clone github-browse-file gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gist gh marshal logito pcache ht gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip flycheck-joker flycheck evil-magit magit magit-popup git-commit ghub let-alist with-editor eshell-z eshell-prompt-extras esh-help emmet-mode diff-hl company-web web-completion-data company-tern dash-functional tern company-statistics company-quickhelp pos-tip company coffee-mode clojure-snippets clj-refactor inflections edn multiple-cursors paredit peg cider-eval-sexp-fu auto-yasnippet yasnippet auto-indent-mode auto-dictionary all-the-icons memoize alert log4e gntp ac-ispell ac-cider auto-complete cider seq queue clojure-mode ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
