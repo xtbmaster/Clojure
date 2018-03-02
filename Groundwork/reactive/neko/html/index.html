@@ -6,7 +6,19 @@
       <title></title>
       <!-- Google Fonts -->
       <link href="https://fonts.googleapis.com/css?family=PT+Sans|Pangolin" rel="stylesheet">
-        <link href="styles.css" rel="stylesheet">
+      <link href="styles.css" rel="stylesheet">
+      <script>
+        if ('registerElement' in document
+        && 'createShadowRoot' in HTMLElement.prototype
+        && 'import' in document.createElement('link')
+        && 'content' in document.createElement('template')) {
+        // We're using a browser with native WC support!
+        } else {
+        document.write('<script src="https:\/\/cdnjs.cloudflare.com/ajax/libs/polymer/0.3.4/platform.js"><\/script>')
+        }
+        </script>
+        <link rel="import" href="http://geelen.github.io/x-gif/dist/x-gif.html">
+
         </head>
         <!-- Body with html div elements -->
         <body>
@@ -15,7 +27,8 @@
             <p>That's why it is called the present</p>
           </div>
           <div id="div2">
-            <img id="tenor-gif" src="imgs/tenor.gif"/>
+            <x-gif id="tenor-gif" src="imgs/tenor.gif" ></x-gif>
+            <br><button id="tenor-button">Neko Dash</button></br>
           </div>
         </body>
         <!-- File compiled from ClojureScript -->

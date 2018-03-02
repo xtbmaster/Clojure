@@ -11,7 +11,7 @@
             :line-height 1.5
             :text-align "center"})
       (body { :height 400
-              :padding-left "20%"
               :font-family "Pangolin, cursive"
-              :font-size "12px"})
+              :font-size "12px"
+              :padding-left 0})
       (div {:text-align "center"})]))
