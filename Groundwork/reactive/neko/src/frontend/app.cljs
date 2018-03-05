@@ -16,8 +16,12 @@
 
 (def dom-img (sel1 :#tenor-gif))
 (def dom-button (sel1 :#tenor-button))
+
 (def milk-counter (atom 0))
 (def milk-channel (chan))
+
+(def nomilk-counter (atom 0))
+(def nomilk-channel (chan))
 
 (defn make-fox-dance []
   (utils/set-attribute!
@@ -49,6 +53,8 @@
       :div
       "newdiv"
       [:img {:class "milk" :src "/imgs/milk.png"}]))
+
+  (reset! nomilk-counter -1)
   (go
     (swap! milk-counter inc)
     (>! milk-channel @milk-counter)))
@@ -82,7 +88,20 @@
         (dommy/set-text!
           (sel1 "#slide")
           (str "Boxes of Milk delivered:" v))
-        (recur)))))
+        (recur))))
+  (go
+    (while true
+      (let [v (<! nomilk-channel)]
+        (dommy/set-text!
+          (sel1 "#nomilk")
+          (str "Time without fresh milk:" v " s")))))
+
+  (go
+    (loop []
+      (<! (timeout 1000))
+      (swap! nomilk-counter inc)
+      (>! nomilk-channel @nomilk-counter)
+      (recur))))
 
 
 
