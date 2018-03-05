@@ -8,7 +8,8 @@
                    [org.clojure/clojurescript "1.9.946" :scope "test"]
                    [org.clojure/core.async "0.4.474"]
                    [prismatic/dommy "1.1.0"]
-                   [hiccups "0.3.0"]])
+                   [hiccups "0.3.0"]
+                   [cljs-ajax "0.7.3"]])
 (require
   '[org.martinklepsch.boot-garden :refer [garden]]
   '[adzerk.boot-cljs :refer [cljs]]

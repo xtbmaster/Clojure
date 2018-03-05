@@ -1,6 +1,7 @@
 (ns frontend.app
   (:require
     [frontend.utils :as utils]
+    [frontend.weather :as weather]
     [hiccups.runtime]
     [dommy.core :as dommy :refer-macros [sel sel1]]
     [cljs.core.async :refer [put! chan <! >! timeout close!]])
@@ -82,13 +83,12 @@
     :click
     #(doseq [d (sel :#newdiv)]
        (dommy/clear! d)))
-  (go
-    (loop []
-      (let [v (<! milk-channel)]
-        (dommy/set-text!
-          (sel1 "#slide")
-          (str "Boxes of Milk delivered:" v))
-        (recur))))
+  (go-loop []
+    (let [v (<! milk-channel)]
+      (dommy/set-text!
+        (sel1 "#slide")
+        (str "Boxes of Milk delivered:" v))
+      (recur)))
   (go
     (while true
       (let [v (<! nomilk-channel)]
@@ -96,12 +96,21 @@
           (sel1 "#nomilk")
           (str "Time without fresh milk:" v " s")))))
 
-  (go
-    (loop []
-      (<! (timeout 1000))
-      (swap! nomilk-counter inc)
-      (>! nomilk-channel @nomilk-counter)
-      (recur))))
+  (go-loop []
+    (<! (timeout 1000))
+    (swap! nomilk-counter inc)
+    (>! nomilk-channel @nomilk-counter)
+    (recur))
+
+  (weather/get-weather "Rome")
+  (go-loop []
+    (when-let [msg (<! weather/weather-handler-chan)]
+      (dommy/append! (sel1 :#weather-cur)
+        (utils/create-element :div
+          "weather"
+          [:img
+            { :class "weather"
+              :src (weather/get-icon (weather/read-weather msg))}])))))
 
 
 
