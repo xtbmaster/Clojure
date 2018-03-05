@@ -39,6 +39,12 @@
       (utils/remove-attribute! dom-img :start)
       (make-fox-stop))))
 
+(defn more-milk []
+  (dommy/append! (sel1 :#div3)
+    (utils/create-element
+      :div
+      "newdiv"
+      [:img {:class "milk" :src "/imgs/milk.png"}])))
 
 (defn init []
   (utils/set-attribute
@@ -52,7 +58,12 @@
   (dommy/listen!
     (sel1 :#button-slide)
     :click
-    #(dommy/toggle-class! (sel1 :#slide) "slide")))
+    #(dommy/toggle-class! (sel1 :#slide) "slide"))
+  (dommy/listen!
+    (sel1 :#button-milk)
+    :click
+    more-milk))
+
 
 
 

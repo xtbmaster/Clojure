@@ -11,7 +11,8 @@
 (defstyles screen
   (let [ h1 (rule :h1)
          body (rule :body)
-         div (rule :div)]
+         div (rule :div)
+         milk (rule :.milk)]
     [ slide
       ( (rule :.slide) {
                          :position "absolute"
@@ -21,6 +22,10 @@
                          :z-index -10
                          :animation "slide 0.5s forwards"
                          :animation-delay "0s"})
+      (milk 
+        { :height "32px"
+          :width "32px"
+          :float "left"})
 
       (h1 { :font-size "14px"
             :line-height 1.5

@@ -23,6 +23,19 @@
         <!-- Body with html div elements -->
         <body>
           <h1>Today is a gift.</h1>
+
+          <div id="div0">
+            <p id="p1">This is a paragraph.</p>
+          </div>
+
+          <script>
+            var p2 = document.createElement("p2");
+            var node = document.createTextNode("This is new.");
+            p2.appendChild(node);
+            var div0= document.getElementById("div0");
+            div0.appendChild(p2);
+          </script>
+
           <div id="div1">
             <button id="button-slide">Slide</button>
             <p id="slide">That's why it is called the present</p>
@@ -30,7 +43,11 @@
           <div id="div2">
             <x-gif id="tenor-gif" src="imgs/tenor.gif" ></x-gif>
             <br><button id="tenor-button">Neko Dash</button></br>
+            <br><button id="button-milk">Add Milk</button>
           </div>
+          <div id="div3">
+          </div>
+
         </body>
         <!-- File compiled from ClojureScript -->
         <script src="js/app.js"></script>

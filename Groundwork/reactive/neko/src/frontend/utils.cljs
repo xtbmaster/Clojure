@@ -1,6 +1,8 @@
 (ns frontend.utils
   (:require
-    [dommy.core :as dommy]))
+    [dommy.core :as dommy])
+  (:require-macros
+    [hiccups.core :as hiccups :refer [html]]))
 
 ;; (defn by-id [id] ;; is replaced by dommy macros sel1
 ;;   (.getElementById js/document (name id)))
@@ -16,6 +18,13 @@
 (defn remove-attribute!
   [dom attr]
   (dommy/remove-attr! dom attr))
+
+(defn create-element
+  [tag id & [nodes]]
+  (let [el (dommy/create-element tag)]
+    (aset el "id" id)
+    (when nodes (dommy/set-html! el (html nodes)))
+    el))
 
 ;; (defn add-listener-old-skool
 ;;   [dom event function]
