@@ -2,8 +2,10 @@
   (:require
     [frontend.utils :as utils]
     [hiccups.runtime]
-    [dommy.core :as dommy :refer-macros [sel sel1]])
+    [dommy.core :as dommy :refer-macros [sel sel1]]
+    [cljs.core.async :refer [put! chan <! >! timeout close!]])
   (:require-macros
+    [cljs.core.async.macros :refer [go go-loop]]
     [hiccups.core :as hiccups :refer [html]]))
 
 
@@ -14,6 +16,8 @@
 
 (def dom-img (sel1 :#tenor-gif))
 (def dom-button (sel1 :#tenor-button))
+(def milk-counter (atom 0))
+(def milk-channel (chan))
 
 (defn make-fox-dance []
   (utils/set-attribute!
@@ -44,7 +48,11 @@
     (utils/create-element
       :div
       "newdiv"
-      [:img {:class "milk" :src "/imgs/milk.png"}])))
+      [:img {:class "milk" :src "/imgs/milk.png"}]))
+  (go
+    (swap! milk-counter inc)
+    (>! milk-channel @milk-counter)))
+
 
 (defn init []
   (utils/set-attribute
@@ -60,9 +68,21 @@
     :click
     #(dommy/toggle-class! (sel1 :#slide) "slide"))
   (dommy/listen!
-    (sel1 :#button-milk)
+    (sel1 :#button-add-milk)
     :click
-    more-milk))
+    more-milk)
+  (dommy/listen!
+    (sel1 :#button-remove-milk)
+    :click
+    #(doseq [d (sel :#newdiv)]
+       (dommy/clear! d)))
+  (go
+    (loop []
+      (let [v (<! milk-channel)]
+        (dommy/set-text!
+          (sel1 "#slide")
+          (str "Boxes of Milk delivered:" v))
+        (recur)))))
 
 
 
