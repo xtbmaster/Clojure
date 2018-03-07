@@ -391,9 +391,6 @@ before packages are loaded. If you are unsure, you should try in setting them in
     nxml-slash-auto-complete-flag t
     lisp-indent-offset 2
     warning-minimum-level :emergency
-    indent-tabs-mode t
-    default-tab-width 4
-    tab-width 4
 
     ;; Cider
     cider-repl-pop-to-buffer-on-connect 'display-only

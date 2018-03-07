@@ -2,9 +2,11 @@
   (:require
     [frontend.utils :as utils]
     [frontend.weather :as weather]
+    [frontend.rules :as rules]
     [hiccups.runtime]
     [dommy.core :as dommy :refer-macros [sel sel1]]
-    [cljs.core.async :refer [put! chan <! >! timeout close!]])
+    [cljs.core.async :refer [put! chan <! >! timeout close!]]
+    [beicon.core :as beicon])
   (:require-macros
     [cljs.core.async.macros :refer [go go-loop]]
     [hiccups.core :as hiccups :refer [html]]))
@@ -15,6 +17,7 @@
 (def fox-dancing 
   (atom true))
 
+
 (def dom-img (sel1 :#tenor-gif))
 (def dom-button (sel1 :#tenor-button))
 
@@ -23,6 +26,11 @@
 
 (def nomilk-counter (atom 0))
 (def nomilk-channel (chan))
+
+(def nomilk-stream
+  (->>
+    (beicon/from-atom nomilk-counter)
+    (beicon/filter #(> % 10))))
 
 (defn make-fox-dance []
   (utils/set-attribute!
@@ -35,6 +43,9 @@
     dom-img
     :stopped
     ""))
+
+(beicon/on-value nomilk-stream #(make-fox-stop))
+
 
 (defn swap-fox []
   (reset! fox-dancing (not @fox-dancing))
@@ -83,6 +94,13 @@
     :click
     #(doseq [d (sel :#newdiv)]
        (dommy/clear! d)))
+  (dommy/listen!
+    (sel1 :#button-angry)
+    :click
+    #(.alert js/window
+       (if (rules/is-fox-angry?)
+         (str "The fox is angry:[lvl " (rules/angry-level) "]")
+         "The fox is not angry yet")))
   (go-loop []
     (let [v (<! milk-channel)]
       (dommy/set-text!
@@ -99,6 +117,7 @@
   (go-loop []
     (<! (timeout 1000))
     (swap! nomilk-counter inc)
+    (rules/new-milk-time @nomilk-counter)
     (>! nomilk-channel @nomilk-counter)
     (recur))
 
@@ -110,7 +129,11 @@
           "weather"
           [:img
             { :class "weather"
-              :src (weather/get-icon (weather/read-weather msg))}])))))
+              :src (weather/get-icon (weather/read-weather msg))}]))
+      
+      (weather/store-in-mongo
+        "weather"
+        (utils/clj->json (weather/read-weather msg))))))
 
 
 
