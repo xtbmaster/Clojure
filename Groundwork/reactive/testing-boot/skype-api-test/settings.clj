@@ -1,4 +1,4 @@
 {
-  :username "a.man90"
-  :password "int#nsive7441537"}
+  :username "USERNAME"
+  :password "PASS"}
   
