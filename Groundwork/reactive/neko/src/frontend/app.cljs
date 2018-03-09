@@ -99,8 +99,8 @@
     :click
     #(.alert js/window
        (if (rules/is-fox-angry?)
-         (str "The fox is angry:[lvl " (rules/angry-level) "]")
-         "The fox is not angry yet")))
+         (str "yes - " (rules/angry-level))
+         "no")))
   (go-loop []
     (let [v (<! milk-channel)]
       (dommy/set-text!
