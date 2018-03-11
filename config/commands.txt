@@ -17,10 +17,6 @@ boot:
             (task-options! <name> {:<arg-name> <val>})
       
 
-
-
-
-
                   SPACEMACS
 
 utils:
@@ -30,12 +26,15 @@ utils:
       jump to the mark - SPC u C-SPC
       colors - SPC c l
 
+      port listening - lsof -i :8080
+      fuser 8080/tcp - show who is listening
+      fuser -k 8080/tcp - kill
 
 windows:
 
       create new frame - SPC w F
       change frame - SPC w o
-      close fram - SPC w D
+      close frame - SPC w D
 
 
 refactor:
