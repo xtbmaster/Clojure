@@ -18,7 +18,7 @@ values."
     ;; lazy install any layer that support lazy installation even the layers
     ;; listed in `dotspacemacs-configuration-layers'. `nil' disable the lazy
     ;; installation feature and you have to explicitly list a layer in the
-    ;; varim
+    ;; variable `dotspacemacs-configuration-layers' to install it.
     ;; (default 'unused)
     dotspacemacs-enable-lazy-installation 'unused
     ;; If non-nil then Spacemacs will ask for confirmation before installing
@@ -30,29 +30,29 @@ values."
     dotspacemacs-configuration-layer-path '()
     ;; List of configuration layers to load.
     dotspacemacs-configuration-layers
-    ;; ----------------------------------------------------------------
-    ;; Example of useful layers you may want to use right away.
-    ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
-    ;; <M-m f e R> (Emacs style) to install them.
-    ;; ----------------------------------------------------------------
+    '(
+       ;; ----------------------------------------------------------------
+       ;; Example of useful layers you may want to use right away.
+       ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
+       ;; <M-m f e R> (Emacs style) to install them.
+       ;; ----------------------------------------------------------------
 
-    ;; Utils
-    `((auto-completion :variables
-        auto-completion-return-key-behavior nil
-        auto-completion-enable-snippets-in-popup t
-        auto-completion-enable-help-tooltip 'manual
-        :disabled-for org erc)
+       (auto-completion :variables
+         auto-completion-return-key-behavior nil
+         auto-completion-enable-snippets-in-popup t
+         auto-completion-enable-help-tooltip 'manual
+         :disabled-for org erc)
        spell-checking
        syntax-checking
        helm
        html
        emacs-lisp
        clojure
-       slack
+       ;; slack
        javascript
        better-defaults
        git
-       github
+       ;; github
        org
        (shell :variables
          shell-default-height 30
@@ -61,40 +61,46 @@ values."
        version-control
        markdown
        html
-       semantic
+       semantic ;; library for better function searching SPC s j
        smex
-       ranger
-
-       )
+       ranger)
+       
     ;; List of additional packages that will be installed without being
     ;; wrapped in a layer. If you need some configuration for these
     ;; packages, then consider creating a layer. You can also put the
     ;; configuration in `dotspacemacs/user-config'.
     dotspacemacs-additional-packages '(
+
                                         all-the-icons
                                         rainbow-mode
                                         color-identifiers-mode
                                         aggressive-indent
                                         auto-indent-mode
                                         company
+                                        markdown-mode
 
                                         js2-mode
                                         json-mode
                                         impatient-mode
 
-
                                         ;; Clojure
+
                                         lispy
                                         ac-cider
                                         emacs-lisp
+                                        flycheck-clojure
                                         clojure-mode
+                                        clojure-mode-extra-font-locking
                                         clj-refactor
                                         flycheck-joker
                                         flycheck-package
                                         helm-flycheck
                                         parinfer
+                                        paredit
+                                        smartparens)
 
-                                        )
+
+                                        
     ;; A list of packages that cannot be updated.
     dotspacemacs-frozen-packages '()
     ;; A list of packages that will not be installed and loaded.
@@ -173,7 +179,7 @@ values."
     ;; Default font, or prioritized list of fonts. `powerline-scale' allows to
     ;; quickly tweak the mode-line size to make separators look not too crappy.
     dotspacemacs-default-font '("Source Code Pro"
-                                 :size 14
+                                 :size 13
                                  :weight normal
                                  :width normal
                                  :powerline-scale 1.1)
@@ -369,41 +375,41 @@ before packages are loaded. If you are unsure, you should try in setting them in
 
   (setq-default
 
-    ;; Evil
-    evil-shift-round nil
+   ;; Evil
+   evil-shift-round nil
 
-    ;; Whitespace mode (SPC-t-w)
-    whitespace-style '(face tabs tab-mark)
-    whitespace-display-mappings
-    '((newline-mark 10 [172 10]
-        (tab-mark 9 [9655 9])))
+   ;; Whitespace mode (SPC-t-w)
+   whitespace-style '(face tabs tab-mark)
+   whitespace-display-mappings
+   '((newline-mark 10 [172 10]
+                   (tab-mark 9 [9655 9])))
 
-    ;; Flycheck
-    flycheck-check-syntax-automatically '(save mode-enabled)
+   ;; Flycheck
+   flycheck-check-syntax-automatically '(save mode-enabled)
 
-    ;; Web
-    web-mode-markup-indent-offset 2
-    web-momde-css-indent-offset 2
+   ;; Web
+   web-mode-markup-indent-offset 2
+   web-mode-css-indent-offset 2
 
-    ;; Other
-    comment-column 70
-    sgml-xml-mode t
-    nxml-slash-auto-complete-flag t
-    lisp-indent-offset 2
-    warning-minimum-level :emergency
+   ;; Other
+   comment-column 70
+   sgml-xml-mode t
+   nxml-slash-auto-complete-flag t
+   lisp-indent-offset 2
+   warning-minimum-level :emergency
 
-    ;; Cider
-    cider-repl-pop-to-buffer-on-connect 'display-only
-    cider-repl-display-help-banner 'nil
-    cider-repl-use-clojure-font-lock t
+   ;; Cider
+   cider-repl-pop-to-buffer-on-connect 'display-only
+   cider-repl-display-help-banner 'nil
+   cider-repl-use-clojure-font-lock t
 
-    ;; Icons
-    all-the-icons-color-icons t
-    all-the-icons-for-buffer t)) 
-  
-
+   ;; Icons
+   all-the-icons-color-icons t
+   all-the-icons-for-buffer t)
 
 
+
+  )
 
 (defun dotspacemacs/user-config ()
   "Configuration function for user code.
@@ -414,6 +420,8 @@ explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
 
   ;; Custom-functions
+
+
   (defun bb/define-key (keymap &rest bindings)
     (declare (indent 1))
     (while bindings
@@ -471,12 +479,14 @@ you should place your code here."
   (with-eval-after-load 'company
     (define-key company-active-map (kbd "C-c i") #'company-complete-selection)) 
 
+  ;; multiple-cursor
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (global-set-key (kbd "C->") 'mc/mark-next-like-this)
+  (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+  (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 
 
-  ;; Hooks
+ ;; Hooks
   
   (add-hook 'text-mode-hook 'auto-fill-mode)
   (add-hook 'makefile-mode-hook 'whitespace-mode)
@@ -485,8 +495,8 @@ you should place your code here."
   (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
   
   (add-hook 'css-mode-hook #'my-rainbow-mode-hook)
-  (add-hook 'clojure-mode-hook #'my-global-rainbow-mode-hook)
-  (add-hook 'clojurescript-mode-hook #'my-global-rainbow-mode-hook)
+  (add-hook 'clojure-mode-hook #'my-rainbow-mode-hook)
+  (add-hook 'clojurescript-mode-hook #'my-rainbow-mode-hook)
 
 
 
@@ -517,7 +527,6 @@ you should place your code here."
   ;;       Clojure
   (add-hook 'clojure-mode-hook 'cider-mode) ;; Enter cider mode when entering the clojure major mode
   (add-hook 'clojure-mode-hook #'my-clojure-mode-hook)
-  (add-hook 'cider-mode-hook 'set-auto-complete-as-completion-at-point-function)
 
 
 
@@ -533,12 +542,7 @@ you should place your code here."
   (add-hook 'after-init-hook 'global-company-mode)
   (add-hook 'after-init-hook 'global-color-identifiers-mode)
 
-  (add-hook 'auto-complete-mode-hook 'set-auto-complete-as-completion-at-point-function)
-  (add-hook 'cider-mode-hook 'set-auto-complete-as-completion-at-point-function)
-
-
-
-  ;; parinfer
+ ;; parinfer
 
   (use-package parinfer
     :ensure t
@@ -592,25 +596,24 @@ you should place your code here."
   ;; Boot
 
   (add-to-list 'auto-mode-alist '("\\.boot\\'" . clojure-mode))
-  (add-to-list 'magic-mode-alist '(".* boot" . clojure-mode)))
+  (add-to-list 'magic-mode-alist '(".* boot" . clojure-mode))
 
-(defun dotspacemacs/emacs-custom-settings ()
-  "Emacs custom settings.
-This is an auto-generated function, do not modify its content directly, use
-Emacs customize menu instead.
-This function is called at the very end of Spacemacs initialization."
-  (custom-set-variables
-    ;; custom-set-variables was added by Custom.
-    ;; If you edit it by hand, you could mess it up, so be careful.
-    ;; Your init file should contain only one such instance.
-    ;; If there is more than one, they won't work right.
-    '(package-selected-packages
-       (quote
-         (lispy zoutline color-identifiers-mode yasnippet-snippets yaml-mode xterm-color ws-butler winum which-key web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package unfill toc-org tagedit symon string-inflection stickyfunc-enhance srefactor spaceline-all-the-icons smex smeargle slim-mode slack shell-pop scss-mode sayid sass-mode restart-emacs ranger rainbow-mode rainbow-delimiters pug-mode popwin persp-mode pcre2el password-generator parinfer paradox overseer orgit org-projectile org-present org-pomodoro org-mime org-download org-bullets org-brain open-junk-file neotree nameless mwim multi-term move-text mmm-mode markdown-toc magit-gitflow magit-gh-pulls macrostep lorem-ipsum livid-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc indent-guide impatient-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-mode-manager helm-make helm-gitignore helm-flycheck helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot github-search github-clone gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe git-gutter-fringe+ gist gh-md fuzzy font-lock+ flyspell-correct-helm flycheck-pos-tip flycheck-package flycheck-joker flx-ido fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eshell-z eshell-prompt-extras esh-help emoji-cheat-sheet-plus emmet-mode elisp-slime-nav editorconfig dumb-jump diminish diff-hl define-word counsel-projectile company-web company-tern company-statistics company-quickhelp company-emoji column-enforce-mode coffee-mode clojure-snippets clojure-cheatsheet clj-refactor clean-aindent-mode cider-eval-sexp-fu centered-cursor-mode browse-at-remote auto-yasnippet auto-indent-mode auto-highlight-symbol auto-dictionary auto-compile aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line ac-ispell ac-cider))))
-  (custom-set-faces
-    ;; custom-set-faces was added by Custom.
-    ;; If you edit it by hand, you could mess it up, so be careful.
-    ;; Your init file should contain only one such instance.
-    ;; If there is more than one, they won't work right.
-    )
+
   )
+
+;; Do not write anything past this comment. This is where Emacs will
+;; auto-generate custom variable definitions.
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+  '(package-selected-packages
+     (quote
+       (flycheck-clojure clojure-mode-extra-font-locking packed rainbow-mode impatient-mode color-identifiers-mode auto-indent-mode all-the-icons memoize xterm-color web-mode web-beautify unfill tagedit stickyfunc-enhance srefactor smex smeargle slim-mode slack emojify circe oauth2 websocket shell-pop scss-mode sass-mode ranger pug-mode orgit org-projectile org-category-capture org-present org-pomodoro org-mime org-download mwim multi-term mmm-mode markdown-toc markdown-mode magit-gitflow magit-gh-pulls livid-mode skewer-mode simple-httpd less-css-mode json-mode json-snatcher json-reformat js2-refactor js2-mode js-doc htmlize helm-gitignore helm-css-scss helm-company helm-c-yasnippet haml-mode gnuplot gitignore-mode github-search github-clone github-browse-file gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gist gh marshal logito pcache ht gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip evil-magit magit magit-popup git-commit ghub with-editor eshell-z eshell-prompt-extras esh-help emmet-mode diff-hl company-web web-completion-data company-tern dash-functional tern company-statistics company-quickhelp pos-tip company coffee-mode clojure-snippets auto-yasnippet auto-dictionary alert log4e gntp ac-ispell cider-eval-sexp-fu parinfer lispy zoutline swiper ivy helm-flycheck flycheck-package package-lint flycheck-joker flycheck clj-refactor inflections edn multiple-cursors paredit yasnippet peg ac-cider auto-complete cider queue clojure-mode ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-themes helm-swoop helm-projectile helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu elisp-slime-nav dumb-jump diminish define-word column-enforce-mode clean-aindent-mode auto-highlight-symbol auto-compile aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

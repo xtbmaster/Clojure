@@ -38,6 +38,9 @@ windows:
 
 
 refactor:
+
+      replace - :%s/old/new/g
+
       add dependency - , r a p
       add require to ns - , r a r
       create function with name under cursor - , r f e
@@ -128,6 +131,9 @@ navigating:
       show previous yanked parts - SPC r y
       list of functions - SPC s j
       expand region - SPC v
+
+      searching text - SPC s p (SPC /) (SPC *)
+      searching text in open buffets - SPC s B/b
       
 
 
@@ -146,6 +152,8 @@ insert:
 moving:
 
       scrolling - C y, C e
+      page start - g g
+      page end - G
 
 
       remove surrounding - d s <paren type>
