@@ -25,6 +25,7 @@ utils:
       set a mark - C-SPC
       jump to the mark - SPC u C-SPC
       colors - SPC c l
+      stop process in cider - C-c C-c
 
       port listening - lsof -i :8080
       fuser 8080/tcp - show who is listening
@@ -35,6 +36,7 @@ windows:
       create new frame - SPC w F
       change frame - SPC w o
       close frame - SPC w D
+      kill matching buffers - SPC SPC kill-matching-buffers
 
 
 refactor:
@@ -157,3 +159,5 @@ moving:
 
 
       remove surrounding - d s <paren type>
+
+

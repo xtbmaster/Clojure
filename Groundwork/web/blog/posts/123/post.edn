@@ -1,5 +1,0 @@
-{:id "123"
-:created #inst "2018-01-26"
-:author "arthur"
-:body "As any other company, Wix started out small. One development team, one product, one code repository. As Wix started to grow with more development teams, GitHub seemed to be a right fit for us, as our version control service. Soon after, new problems started to arise and everything went out of order. To properly manage the chaos, new rules were formed, but it was not enough. Human factors errors remained to be an issue and the biggest source of security risks — this is where the story of Automation GitHub Services begins."
-:pictures ["dog.jpg"]}
