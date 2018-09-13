@@ -17,10 +17,13 @@ boot:
             (task-options! <name> {:<arg-name> <val>})
       
 
+                  LINUX
+
+      change java version sudo update-alternatives --config java
+
                   SPACEMACS
 
 utils:
-
       change file encoding - C-x RET f
       set a mark - C-SPC
       jump to the mark - SPC u C-SPC
@@ -138,7 +141,13 @@ navigating:
       searching text in open buffets - SPC s B/b
       
 
+evaluating:
 
+      skewer:
+        eval buffer - , s b
+        eval function - , s f
+        eval expr - , e e
+        skewer repl - , '
 
 
 

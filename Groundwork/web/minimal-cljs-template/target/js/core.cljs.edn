@@ -1,0 +1,1 @@
+{:require [modern-cljs.core adzerk.boot-reload.js.core adzerk.boot-cljs-repl], :compiler-options {:asset-path "js/main.out"}}

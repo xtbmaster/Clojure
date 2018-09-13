@@ -1,0 +1,6 @@
+[submodule "Groundwork/web/boot-figwheel-example"]
+	path = Groundwork/web/boot-figwheel-example
+	url = https://github.com/torgeir/boot-figwheel-example.git
+[submodule "Groundwork/web/saapas"]
+	path = Groundwork/web/saapas
+	url = https://github.com/Deraen/saapas.git
