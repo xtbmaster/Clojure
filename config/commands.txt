@@ -96,7 +96,7 @@ refactor:
 
       iedit:
 
-            edit occurencies - SPC s e
+            edit occurencies - SPC s e/v e
             restrict the scope to a function - SPC s e F
 
       evil-surround:
